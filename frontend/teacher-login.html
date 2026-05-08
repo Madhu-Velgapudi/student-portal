@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Teacher Login — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .teacher-auth-wrapper { min-height:100vh; display:grid; grid-template-columns:1fr 1fr; }
+    .teacher-left {
+      background: #0d3b2e; padding:3rem;
+      display:flex; flex-direction:column; justify-content:space-between;
+      position:relative; overflow:hidden;
+    }
+    .teacher-left::before {
+      content:''; position:absolute; top:-100px; right:-100px;
+      width:400px; height:400px; border-radius:50%;
+      background:radial-gradient(circle, rgba(26,122,74,0.4) 0%, transparent 70%);
+    }
+    .teacher-brand { display:flex; align-items:center; gap:10px; z-index:1; }
+    .teacher-brand-mark {
+      width:36px; height:36px; background:#1a7a4a; border-radius:9px;
+      display:flex; align-items:center; justify-content:center;
+      font-size:0.9rem; color:white; font-weight:800; font-family:var(--font-head);
+    }
+    .teacher-brand-name { font-family:var(--font-head); font-size:1.1rem; font-weight:700; color:white; }
+    .teacher-left-content { z-index:1; }
+    .teacher-left h2 { font-family:var(--font-head); font-size:clamp(1.8rem,3vw,2.6rem); font-weight:800; color:white; line-height:1.15; margin-bottom:1.2rem; }
+    .teacher-left h2 span { color:#4ade80; }
+    .teacher-left p { color:#9ca3af; font-size:0.95rem; line-height:1.7; }
+    .teacher-features { display:flex; flex-direction:column; gap:12px; z-index:1; }
+    .teacher-feature { display:flex; align-items:center; gap:10px; color:#9ca3af; font-size:0.85rem; }
+    .teacher-feature-icon { width:28px; height:28px; background:rgba(26,122,74,0.3); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:0.8rem; flex-shrink:0; }
+    .teacher-right { background:var(--bg); display:flex; align-items:center; justify-content:center; padding:3rem 2rem; }
+    .teacher-card { width:100%; max-width:400px; animation:fadeUp 0.4s ease; }
+    .teacher-card h1 { font-family:var(--font-head); font-size:1.9rem; font-weight:800; margin-bottom:0.3rem; letter-spacing:-0.5px; }
+    .teacher-card p.sub { color:var(--muted); font-size:0.9rem; margin-bottom:2rem; }
+    .teacher-badge { display:inline-flex; align-items:center; gap:6px; background:#e6f4ed; color:#1a7a4a; border:1px solid #b8dfc9; padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; margin-bottom:1.5rem; }
+    .btn-teacher { background:#1a7a4a; color:white; box-shadow:0 2px 8px rgba(26,122,74,0.3); }
+    .btn-teacher:hover { background:#155e3a; transform:translateY(-1px); }
+    @media(max-width:768px){ .teacher-auth-wrapper{grid-template-columns:1fr;} .teacher-left{display:none;} }
+  </style>
+</head>
+<body>
+  <div class="teacher-auth-wrapper">
+    <div class="teacher-left">
+      <div class="teacher-brand">
+        <div class="teacher-brand-mark">T</div>
+        <span class="teacher-brand-name">Teacher Portal</span>
+      </div>
+      <div class="teacher-left-content">
+        <h2>Teach, manage<br/>and <span>inspire</span><br/>students.</h2>
+        <p>Access your assigned courses, post announcements, add study materials and manage course content.</p>
+      </div>
+      <div class="teacher-features">
+        <div class="teacher-feature"><div class="teacher-feature-icon">📚</div>Manage your assigned courses</div>
+        <div class="teacher-feature"><div class="teacher-feature-icon">📢</div>Post announcements and materials</div>
+        <div class="teacher-feature"><div class="teacher-feature-icon">📊</div>View student enrollment</div>
+      </div>
+    </div>
+    <div class="teacher-right">
+      <div class="teacher-card">
+        <div class="teacher-badge">👨‍🏫 Teacher Access</div>
+        <h1>Teacher Login</h1>
+        <p class="sub">Sign in with your teacher credentials.</p>
+        <div class="alert alert-error" id="errMsg"></div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="teacher@example.com" autocomplete="off"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Your password" autocomplete="new-password"/>
+        </div>
+        <button class="btn btn-primary btn-teacher" id="loginBtn" onclick="teacherLogin()">Sign In →</button>
+        <a href="login.html" style="display:block;text-align:center;margin-top:1.2rem;font-size:0.85rem;color:var(--muted);text-decoration:none;">← Back to Student Login</a>
+      </div>
+    </div>
+  </div>
+  <script src="js/config.js"></script>
+  <script>
+if (localStorage.getItem("sp_teacher_token")) window.location.href = "teacher-dashboard.html";
+
+    async function teacherLogin() {
+      const btn      = document.getElementById("loginBtn");
+      const email    = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const errMsg   = document.getElementById("errMsg");
+      errMsg.classList.remove("show");
+      if (!email || !password) { errMsg.textContent = "Both fields are required."; errMsg.classList.add("show"); return; }
+      btn.disabled = true; btn.textContent = "Signing in...";
+      try {
+        const res  = await fetch(`${API}/teacher/login`, {
+          method:"POST", headers:{"Content-Type":"application/json"},
+          body: JSON.stringify({email, password})
+        });
+        const data = await res.json();
+        if (res.ok) {
+          localStorage.setItem("sp_teacher_token", data.token);
+          localStorage.setItem("sp_teacher", JSON.stringify(data.teacher));
+          window.location.href = "teacher-dashboard.html";
+        } else {
+          errMsg.textContent = data.error || "Login failed.";
+          errMsg.classList.add("show");
+          btn.disabled = false; btn.textContent = "Sign In →";
+        }
+      } catch {
+        errMsg.textContent = "Cannot connect to server.";
+        errMsg.classList.add("show");
+        btn.disabled = false; btn.textContent = "Sign In →";
+      }
+    }
+    document.addEventListener("keydown", e => { if (e.key === "Enter") teacherLogin(); });
+  </script>
+</body>
+</html>

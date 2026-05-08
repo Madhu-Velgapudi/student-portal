@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Dashboard — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo">
+      <div class="nav-logo-mark">SP</div>
+      StudentPortal
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html" class="active">Dashboard</a>
+      <a href="courses.html">Courses</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="gpa.html">GPA</a>
+    </div>
+    <div class="nav-right">
+      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;" title="Announcements">📢</a>
+      <a href="notifications.html" style="position:relative;text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">
+        🔔<span id="notifBadge" style="display:none;position:absolute;top:4px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%;"></span>
+      </a>
+      <a href="profile.html" style="text-decoration:none;">
+        <div class="nav-user">
+          <div class="nav-avatar" id="navAvatar">S</div>
+          <span class="nav-username" id="navName">Student</span>
+        </div>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Good day, <span id="studentName">Student</span> 👋</h1>
+        <p>Here's your semester overview.</p>
+      </div>
+      <a href="courses.html" style="padding:9px 20px;background:var(--accent);color:white;border-radius:var(--radius-sm);font-family:var(--font-head);font-weight:700;font-size:0.85rem;text-decoration:none;">+ Enroll</a>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row">
+      <div class="stat-card stat-accent">
+        <div class="label">Enrolled Courses</div>
+        <div class="value" id="enrolledCount">—</div>
+        <div class="value-sub">this semester</div>
+      </div>
+      <div class="stat-card stat-green">
+        <div class="label">Total Credits</div>
+        <div class="value" id="totalCredits">—</div>
+        <div class="value-sub">credit hours</div>
+      </div>
+      <div class="stat-card stat-gold">
+        <div class="label">Weekly Classes</div>
+        <div class="value" id="classesThisWeek">—</div>
+        <div class="value-sub">sessions/week</div>
+      </div>
+    </div>
+
+    <!-- CHARTS -->
+    <div id="chartsSection" style="display:none;margin-bottom:2.5rem;">
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-title">📊 Attendance by Course</div>
+          <div class="chart-wrap">
+            <canvas id="attChart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title">📘 Credits Distribution</div>
+          <div class="chart-wrap" style="display:flex;align-items:center;justify-content:center;">
+            <canvas id="credChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COURSES -->
+    <div class="section-header">
+      <div class="section-title">My Enrolled Courses</div>
+      <a href="courses.html" style="font-size:0.82rem;color:var(--accent);text-decoration:none;font-weight:600;">View all →</a>
+    </div>
+    <div class="courses-grid" id="enrolledCourses">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/courses.js"></script>
+  <script>
+    requireAuth();
+
+    async function init() {
+      const user = await fetchUser();
+      if (!user) return;
+
+      const firstName = user.name.split(" ")[0];
+      document.getElementById("studentName").textContent = firstName;
+      document.getElementById("navName").textContent     = firstName;
+      document.getElementById("navAvatar").textContent   = firstName[0].toUpperCase();
+
+      const courses = await fetchEnrolledCourses();
+      document.getElementById("enrolledCount").textContent   = courses.length;
+      document.getElementById("totalCredits").textContent    = courses.reduce((s, c) => s + c.credits, 0);
+      document.getElementById("classesThisWeek").textContent = courses.reduce((s, c) => s + c.slots.length, 0);
+
+      const grid = document.getElementById("enrolledCourses");
+      if (!courses.length) {
+        grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>No courses enrolled yet</h3><p>Head to <a href="courses.html">Courses</a> to get started.</p></div>`;
+      } else {
+        grid.innerHTML = courses.map(c => courseCardHTML(c, true)).join("");
+        // Load charts
+        try {
+          const res     = await fetch(`${API}/attendance/my`, {
+            headers: { "Authorization": "Bearer " + getToken() }
+          });
+          const attData = await res.json();
+          renderCharts(courses, attData);
+          document.getElementById("chartsSection").style.display = "block";
+        } catch {}
+      }
+
+      // Notification badge
+      try {
+        const res  = await fetch(`${API}/notifications/count`, {
+          headers: { "Authorization": "Bearer " + getToken() }
+        });
+        const data = await res.json();
+        if (data.count > 0) document.getElementById("notifBadge").style.display = "block";
+      } catch {}
+    }
+
+    function renderCharts(courses, attData) {
+      const attMap = {};
+      attData.forEach(a => { attMap[a.course_id] = a; });
+
+      const labels    = courses.map(c => c.code);
+      const attValues = courses.map(c => (attMap[c._id] ? attMap[c._id].percentage : 0));
+      const attColors = attValues.map(v => v >= 75 ? "#1a7a4a" : v >= 50 ? "#b5861a" : "#c0392b");
+      const credValues = courses.map(c => c.credits);
+      const pieColors  = ["#2d5be3","#1a7a4a","#b5861a","#e63946","#6a0572","#457b9d","#2a9d8f"];
+
+      // Attendance bar chart
+      new Chart(document.getElementById("attChart"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [{
+            label: "Attendance %",
+            data: attValues,
+            backgroundColor: attColors,
+            borderRadius: 6,
+            borderSkipped: false
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}% attendance` } }
+          },
+          scales: {
+            y: {
+              beginAtZero: true, max: 100,
+              grid: { color: "#eceae3" },
+              ticks: { callback: v => v + "%", font: { family: "Instrument Sans" } }
+            },
+            x: {
+              grid: { display: false },
+              ticks: { font: { family: "Instrument Sans", weight: "600" } }
+            }
+          }
+        }
+      });
+
+      // Credits doughnut chart
+      new Chart(document.getElementById("credChart"), {
+        type: "doughnut",
+        data: {
+          labels,
+          datasets: [{
+            data: credValues,
+            backgroundColor: pieColors,
+            borderWidth: 2,
+            borderColor: "#fff"
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          cutout: "65%",
+          plugins: {
+            legend: {
+              position: "right",
+              labels: { font: { family: "Instrument Sans", size: 11 }, padding: 10, usePointStyle: true }
+            },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} credits` } }
+          }
+        }
+      });
+    }
+
+    init();
+  </script>
+</body>
+</html>

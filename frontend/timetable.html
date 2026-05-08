@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Timetable — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo">
+      <div class="nav-logo-mark">SP</div>
+      StudentPortal
+    </a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="courses.html">Courses</a>
+      <a href="timetable.html" class="active">Timetable</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="gpa.html">GPA</a>
+    </div>
+    <div class="nav-right">
+      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;" title="Announcements">📢</a>
+      <a href="notifications.html" style="position:relative; text-decoration:none; padding:6px 10px; border-radius:var(--radius-sm); color:var(--muted); font-size:1.1rem;">🔔</a>
+      <a href="profile.html" style="text-decoration:none;">
+        <div class="nav-user">
+          <div class="nav-avatar" id="navAvatar">S</div>
+          <span class="nav-username" id="navName">Student</span>
+        </div>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>My Timetable</h1>
+        <p>Auto-generated from your enrolled courses.</p>
+      </div>
+    </div>
+    <div id="timetableContainer">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/timetable.js"></script>
+  <script>
+    requireAuth();
+    async function initNav() {
+      const user = await fetchUser();
+      if (user) {
+        const fn = user.name.split(" ")[0];
+        document.getElementById("navName").textContent = fn;
+        document.getElementById("navAvatar").textContent = fn[0].toUpperCase();
+      }
+    }
+    initNav();
+    loadTimetable();
+  </script>
+</body>
+</html>

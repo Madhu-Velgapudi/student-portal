@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Notifications — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .notif-list { display: flex; flex-direction: column; gap: 0.75rem; max-width: 680px; }
+    .notif-item {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.1rem 1.4rem;
+      display: flex; gap: 1rem; align-items: flex-start;
+      box-shadow: var(--shadow-sm); animation: fadeUp 0.3s ease;
+      transition: box-shadow 0.2s;
+    }
+    .notif-item:hover { box-shadow: var(--shadow); }
+    .notif-item.class_today    { border-left: 3px solid var(--accent); }
+    .notif-item.class_tomorrow { border-left: 3px solid var(--gold); }
+    .notif-item.low_attendance { border-left: 3px solid var(--red); }
+    .notif-item.no_class       { border-left: 3px solid var(--green); }
+    .notif-icon  { font-size: 1.4rem; flex-shrink: 0; margin-top: 1px; }
+    .notif-body  { flex: 1; }
+    .notif-title { font-family: var(--font-head); font-weight: 700; font-size: 0.95rem; color: var(--ink); }
+    .notif-msg   { font-size: 0.85rem; color: var(--muted); margin-top: 0.2rem; }
+    .notif-time  { font-size: 0.75rem; color: var(--muted); margin-top: 0.4rem; font-weight: 500; }
+    .notif-day-badge {
+      display: inline-block; background: var(--accent-light);
+      color: var(--accent); font-size: 0.72rem; font-weight: 700;
+      padding: 3px 10px; border-radius: 20px; margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo"><div class="nav-logo-mark">SP</div>StudentPortal</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="courses.html">Courses</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="gpa.html">GPA</a>
+    </div>
+    <div class="nav-right">
+      <a href="notifications.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--accent);background:var(--accent-light);font-size:1.1rem;">🔔</a>
+      <a href="profile.html" style="text-decoration:none;">
+        <div class="nav-user">
+          <div class="nav-avatar" id="navAvatar">S</div>
+          <span class="nav-username" id="navName">Student</span>
+        </div>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Notifications</h1>
+        <p>Your class reminders and attendance alerts.</p>
+      </div>
+    </div>
+    <div id="notifContainer">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    requireAuth();
+
+    async function loadNotifications() {
+      const user = await fetchUser();
+      if (user) {
+        const fn = user.name.split(" ")[0];
+        document.getElementById("navName").textContent   = fn;
+        document.getElementById("navAvatar").textContent = fn[0].toUpperCase();
+      }
+
+      try {
+        const res           = await fetch(`${API}/notifications/`, {
+          headers: { "Authorization": "Bearer " + getToken() }
+        });
+        const notifications = await res.json();
+        const container     = document.getElementById("notifContainer");
+
+        if (!notifications.length) {
+          container.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-icon">🔔</div>
+              <h3>No notifications</h3>
+              <p>Enroll in courses to start getting reminders.</p>
+            </div>`;
+          return;
+        }
+
+        const today = new Date().toLocaleDateString("en-IN", {
+          weekday: "long", month: "long", day: "numeric"
+        });
+
+        container.innerHTML = `
+          <div class="notif-day-badge">📅 ${today}</div>
+          <div class="notif-list">
+            ${notifications.map(n => `
+              <div class="notif-item ${n.type}">
+                <div class="notif-icon">${n.icon}</div>
+                <div class="notif-body">
+                  <div class="notif-title">${n.title}</div>
+                  <div class="notif-msg">${n.message}</div>
+                  ${n.time ? `<div class="notif-time">⏰ ${n.time}</div>` : ""}
+                </div>
+              </div>`).join("")}
+          </div>`;
+      } catch {
+        document.getElementById("notifContainer").innerHTML = `
+          <div class="empty-state">
+            <div class="empty-icon">⚠️</div>
+            <h3>Could not load notifications</h3>
+            <p>Make sure the backend is running.</p>
+          </div>`;
+      }
+    }
+
+    loadNotifications();
+  </script>
+</body>
+</html>

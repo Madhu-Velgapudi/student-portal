@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .admin-nav {
+      background: #1a1814;
+      border-bottom: 1px solid #2d2a24;
+      padding: 0 2rem;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .admin-nav-logo {
+      font-family: var(--font-head);
+      font-size: 1.1rem; font-weight: 700;
+      color: white; text-decoration: none;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .admin-nav-mark {
+      width: 28px; height: 28px; background: #e63946;
+      border-radius: 7px; display: flex; align-items: center;
+      justify-content: center; font-size: 0.75rem;
+      color: white; font-weight: 800;
+    }
+    .admin-nav-links { display: flex; gap: 2px; }
+    .admin-nav-links a {
+      color: #9ca3af; text-decoration: none;
+      padding: 6px 12px; border-radius: var(--radius-sm);
+      font-size: 0.875rem; font-weight: 500; transition: all 0.15s;
+    }
+    .admin-nav-links a:hover { color: white; background: rgba(255,255,255,0.08); }
+    .admin-nav-links a.active { color: white; background: rgba(230,57,70,0.2); }
+    .admin-nav-right { display: flex; align-items: center; gap: 8px; }
+    .admin-user {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 10px 4px 4px;
+      border-radius: 20px; background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .admin-avatar {
+      width: 28px; height: 28px; background: #e63946;
+      border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 0.7rem; font-weight: 700; color: white;
+    }
+    .admin-username { font-size: 0.82rem; font-weight: 600; color: #e5e7eb; }
+    .btn-admin-logout {
+      color: #9ca3af; cursor: pointer; background: none; border: none;
+      font-family: var(--font-body); font-size: 0.82rem; font-weight: 500;
+      padding: 6px 10px; border-radius: var(--radius-sm); transition: all 0.15s;
+    }
+    .btn-admin-logout:hover { color: #e63946; background: rgba(230,57,70,0.1); }
+
+    /* TABS */
+    .admin-tabs {
+      display: flex; gap: 0; margin-bottom: 2rem;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 3px; width: fit-content;
+    }
+    .admin-tab {
+      padding: 8px 24px; border-radius: 4px; border: none;
+      background: transparent; color: var(--muted);
+      font-family: var(--font-head); font-size: 0.85rem;
+      font-weight: 600; cursor: pointer; transition: all 0.15s;
+    }
+    .admin-tab.active { background: #1a1814; color: white; }
+
+    .admin-section { display: none; }
+    .admin-section.active { display: block; }
+
+    /* TABLE */
+    .data-table {
+      width: 100%; border-collapse: collapse;
+      background: var(--surface); border-radius: var(--radius);
+      overflow: hidden; box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+    .data-table th {
+      font-family: var(--font-head); font-size: 0.75rem;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      padding: 12px 16px; background: var(--bg2);
+      color: var(--muted); text-align: left;
+      border-bottom: 2px solid var(--border);
+    }
+    .data-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 0.875rem; }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table tr:hover td { background: var(--bg2); cursor: pointer; }
+    .status-badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+    .status-active   { background: var(--green-light); color: var(--green); }
+    .status-inactive { background: var(--red-light); color: var(--red); }
+    .status-verified { background: var(--accent-light); color: var(--accent); }
+    .btn-sm { padding: 5px 12px; border-radius: 5px; font-size: 0.75rem; font-weight: 700; cursor: pointer; border: 1.5px solid transparent; font-family: var(--font-head); transition: all 0.15s; }
+    .btn-sm-danger { background: var(--red-light); color: var(--red); border-color: #f5c6c2; }
+    .btn-sm-danger:hover { background: var(--red); color: white; }
+    .btn-sm-toggle { background: var(--accent-light); color: var(--accent); border-color: #c5d5f8; }
+    .btn-sm-toggle:hover { background: var(--accent); color: white; }
+
+    /* ADD COURSE FORM */
+    .add-course-form {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.8rem;
+      margin-bottom: 1.5rem; box-shadow: var(--shadow-sm);
+    }
+    .add-course-form h2 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .slot-entry { background: var(--bg2); border-radius: 8px; padding: 1rem; margin-top: 0.5rem; position: relative; }
+    .slot-entry .remove-slot { position: absolute; top: 8px; right: 8px; background: none; border: none; color: var(--red); cursor: pointer; font-size: 1rem; }
+    .btn-add-slot { background: transparent; border: 1.5px dashed var(--border2); color: var(--muted); padding: 8px 16px; border-radius: var(--radius-sm); font-family: var(--font-head); font-size: 0.82rem; font-weight: 600; cursor: pointer; margin-top: 0.5rem; transition: all 0.15s; }
+    .btn-add-slot:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* STUDENT MODAL */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.5); z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border-radius: var(--radius-lg);
+      padding: 2rem; width: 100%; max-width: 600px;
+      max-height: 80vh; overflow-y: auto;
+      box-shadow: var(--shadow-lg); animation: fadeUp 0.3s ease;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
+    .modal-header h2 { font-family: var(--font-head); font-size: 1.2rem; font-weight: 800; }
+    .modal-close { background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--muted); }
+    .modal-close:hover { color: var(--ink); }
+    .student-course-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .student-course-row:last-child { border-bottom: none; }
+    .att-bar { height: 5px; background: var(--bg2); border-radius: 3px; margin-top: 4px; width: 120px; }
+    .att-bar-fill { height: 100%; border-radius: 3px; }
+
+    .att-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 1rem; margin-bottom: 2rem; }
+  </style>
+</head>
+<body>
+  <!-- ADMIN NAV -->
+  <nav class="admin-nav">
+    <a href="admin-dashboard.html" class="admin-nav-logo">
+      <div class="admin-nav-mark">A</div>
+      Admin Portal
+    </a>
+    <div class="admin-nav-links">
+      <a href="#" class="active" id="navStudents" onclick="switchTab('students', this)">Students</a>
+      <a href="#" id="navCourses" onclick="switchTab('courses', this)">Courses</a>
+      <a href="#" id="navTeachers" onclick="switchTab('teachers', this)">Teachers</a>
+    </div>
+    <div class="admin-nav-right">
+      <div class="admin-user">
+        <div class="admin-avatar" id="adminAvatar">A</div>
+        <span class="admin-username" id="adminName">Admin</span>
+      </div>
+      <button class="btn-admin-logout" onclick="adminLogout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1 id="pageTitle">All Students</h1>
+        <p id="pageSubtitle">View and manage student accounts.</p>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card stat-accent"><div class="label">Total Students</div><div class="value" id="statStudents">—</div></div>
+      <div class="stat-card stat-green"><div class="label">Verified</div><div class="value" id="statVerified">—</div></div>
+      <div class="stat-card" style="border-top:3px solid #e63946"><div class="label">Total Courses</div><div class="value" id="statCourses">—</div></div>
+      <div class="stat-card stat-gold"><div class="label">Total Enrollments</div><div class="value" id="statEnrollments">—</div></div>
+    </div>
+
+    <!-- STUDENTS TAB -->
+    <div class="admin-section active" id="tab-students">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Courses</th>
+            <th>Credits</th>
+            <th>Attendance</th>
+            <th>Joined</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="studentsBody">
+          <tr><td colspan="8" style="text-align:center;padding:2rem;"><div class="spinner"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- COURSES TAB -->
+    <div class="admin-section" id="tab-courses">
+      <div class="add-course-form">
+        <h2>➕ Add New Course</h2>
+        <div class="alert alert-error" id="courseErr"></div>
+        <div class="alert alert-success" id="courseSuc"></div>
+        <div class="form-row">
+          <div class="form-group"><label>Course Name</label><input type="text" id="cName" placeholder="e.g. Data Structures"/></div>
+          <div class="form-group"><label>Course Code</label><input type="text" id="cCode" placeholder="e.g. CS101"/></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Department</label><input type="text" id="cDept" placeholder="e.g. Computer Science"/></div>
+          <div class="form-group"><label>Credits</label><input type="number" id="cCredits" value="3" min="1" max="6"/></div>
+        </div>
+        <div style="margin-top:0.5rem;">
+          <label style="font-size:0.8rem;font-weight:600;color:var(--ink2);">Class Slots</label>
+          <div id="slotsContainer"></div>
+          <button class="btn-add-slot" onclick="addSlot()">+ Add Slot</button>
+        </div>
+        <button class="btn btn-primary" style="width:auto;padding:10px 28px;margin-top:1.2rem;background:#e63946;box-shadow:0 2px 8px rgba(230,57,70,0.3);" onclick="submitCourse()">Add Course</button>
+      </div>
+
+      <table class="data-table">
+        <thead><tr><th>Code</th><th>Name</th><th>Dept</th><th>Credits</th><th>Slots</th><th>Action</th></tr></thead>
+        <tbody id="coursesBody"><tr><td colspan="6" style="text-align:center;padding:2rem;"><div class="spinner"></div></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- STUDENT DETAIL MODAL -->
+  <div class="modal-overlay" id="studentModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="modalStudentName">Student Details</h2>
+        <button class="modal-close" onclick="closeModal()">✕</button>
+      </div>
+      <div id="modalContent"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin-auth.js"></script>
+
+
+  <!-- TEACHERS TAB -->
+  <div class="admin-section" id="tab-teachers" style="display:none;">
+    <div class="add-course-form" style="margin-bottom:1.5rem;">
+      <h2>👨‍🏫 Add New Teacher</h2>
+      <div class="alert alert-error" id="teacherErr"></div>
+      <div class="alert alert-success" id="teacherSuc"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name</label><input type="text" id="tName" placeholder="Teacher's full name"/></div>
+        <div class="form-group"><label>Email</label><input type="email" id="tEmail" placeholder="teacher@example.com"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label>Password</label><input type="password" id="tPassword" placeholder="Min. 6 characters"/></div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <button class="btn btn-primary" style="width:auto;padding:10px 28px;background:#1a7a4a;box-shadow:0 2px 8px rgba(26,122,74,0.3);" onclick="createTeacher()">Add Teacher</button>
+        </div>
+      </div>
+    </div>
+    <table class="data-table">
+      <thead><tr><th>Name</th><th>Email</th><th>Assigned Courses</th><th>Joined</th><th>Actions</th></tr></thead>
+      <tbody id="teachersBody"><tr><td colspan="5" style="text-align:center;padding:2rem;"><div class="spinner"></div></td></tr></tbody>
+    </table>
+  </div>
+
+  <!-- ASSIGN COURSE MODAL -->
+  <div class="modal-overlay" id="assignModal">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-header">
+        <h2 id="assignModalTitle">Assign Course</h2>
+        <button class="modal-close" onclick="closeAssignModal()">✕</button>
+      </div>
+      <div class="form-group">
+        <label>Select Course</label>
+        <select id="assignCourseSelect" style="width:100%;padding:10px 13px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--ink);font-family:var(--font-body);font-size:0.9rem;outline:none;"></select>
+      </div>
+      <button class="btn btn-primary" style="background:#1a7a4a;" onclick="assignCourse()">Assign Course</button>
+    </div>
+  </div>
+
+  <!-- CONTENT MANAGEMENT MODAL -->
+  <div class="modal-overlay" id="contentModal">
+    <div class="modal" style="max-width:700px;">
+      <div class="modal-header">
+        <h2 id="contentModalTitle">Manage Content</h2>
+        <button class="modal-close" onclick="closeContentModal()">✕</button>
+      </div>
+
+      <!-- ANNOUNCEMENTS -->
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-family:var(--font-head);font-weight:700;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:0.8rem;">📢 Announcements</div>
+        <div id="adminAnnList" style="margin-bottom:0.8rem;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+          <input type="text" id="annTitle" placeholder="Title" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+          <button onclick="addAnnouncement()" style="background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font-head);font-weight:700;font-size:0.82rem;cursor:pointer;padding:8px 16px;">+ Add</button>
+        </div>
+        <textarea id="annMessage" placeholder="Message..." rows="2" style="width:100%;margin-top:6px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;resize:vertical;"></textarea>
+      </div>
+
+      <!-- SYLLABUS -->
+      <div style="margin-bottom:1.5rem;">
+        <div style="font-family:var(--font-head);font-weight:700;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:0.8rem;">📅 Syllabus</div>
+        <div id="adminSylList" style="margin-bottom:0.8rem;"></div>
+        <div style="display:grid;grid-template-columns:80px 1fr auto;gap:0.5rem;align-items:center;">
+          <input type="number" id="sylWeek" placeholder="Week" min="1" max="16" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+          <input type="text" id="sylTopic" placeholder="Topic" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+          <button onclick="addSyllabusWeek()" style="background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font-head);font-weight:700;font-size:0.82rem;cursor:pointer;padding:8px 16px;white-space:nowrap;">+ Add</button>
+        </div>
+        <input type="text" id="sylDesc" placeholder="Description (optional)" style="width:100%;margin-top:6px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+      </div>
+
+      <!-- MATERIALS -->
+      <div>
+        <div style="font-family:var(--font-head);font-weight:700;font-size:0.85rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:0.8rem;">📚 Materials</div>
+        <div id="adminMatList" style="margin-bottom:0.8rem;"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;">
+          <input type="text" id="matTitle" placeholder="Title" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+          <select id="matType" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;">
+            <option value="link">🔗 Link</option>
+            <option value="note">📝 Note</option>
+            <option value="video">🎬 Video</option>
+            <option value="pdf">📄 PDF</option>
+          </select>
+        </div>
+        <input type="url" id="matUrl" placeholder="URL (optional)" style="width:100%;margin-top:6px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+        <div style="display:grid;grid-template-columns:1fr auto;gap:0.5rem;margin-top:6px;">
+          <input type="text" id="matDesc" placeholder="Description (optional)" style="padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+          <button onclick="addMaterial()" style="background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);font-family:var(--font-head);font-weight:700;font-size:0.82rem;cursor:pointer;padding:8px 16px;white-space:nowrap;">+ Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
+<!-- This script tag closes body - append content modal before closing body -->

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Register — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <!-- LEFT PANEL -->
+    <div class="auth-left">
+      <div class="auth-brand">
+        <div class="auth-brand-mark">SP</div>
+        <span class="auth-brand-name">StudentPortal</span>
+      </div>
+      <div class="auth-left-content">
+        <h2>Join thousands<br/>of <span>students</span><br/>today.</h2>
+        <p>Create your account, pick your courses, and get a personalized timetable generated automatically.</p>
+      </div>
+      <div class="auth-features">
+        <div class="auth-feature">
+          <div class="auth-feature-icon">⚡</div>
+          Set up your account in under a minute
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🔒</div>
+          Secure email verification
+        </div>
+        <div class="auth-feature">
+          <div class="auth-feature-icon">🎓</div>
+          Access to all available courses
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="auth-right">
+      <div class="auth-card">
+        <h1>Create account</h1>
+        <p class="sub">Join Student Portal and start enrolling in courses.</p>
+
+        <div class="alert alert-error" id="errMsg"></div>
+        <div class="alert alert-success" id="successMsg"></div>
+
+        <div class="form-group">
+          <label>Full Name</label>
+          <input type="text" id="name" placeholder="Your full name" autocomplete="off"/>
+        </div>
+        <div class="form-group">
+          <label>Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" autocomplete="off"/>
+        </div>
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" id="password" placeholder="Min. 6 characters" autocomplete="new-password"/>
+        </div>
+
+        <button class="btn btn-primary" id="registerBtn" onclick="register()">Create Account →</button>
+
+        <div class="auth-footer">
+          Already have an account? <a href="login.html">Log in</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="js/auth.js"></script>
+</body>
+</html>

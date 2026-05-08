@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Attendance — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .att-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+    .att-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.4rem; box-shadow: var(--shadow-sm); }
+    .att-card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; }
+    .att-code { font-size: 0.7rem; color: var(--accent); font-weight: 700; text-transform: uppercase; background: var(--accent-light); padding: 2px 8px; border-radius: 4px; }
+    .att-name { font-family: var(--font-head); font-size: 0.95rem; font-weight: 700; margin-top: 0.3rem; }
+    .att-pct { font-family: var(--font-head); font-size: 1.6rem; font-weight: 800; }
+    .att-pct.good { color: var(--green); }
+    .att-pct.warn { color: var(--gold); }
+    .att-pct.bad  { color: var(--red); }
+    .progress-bar { height: 6px; background: var(--bg2); border-radius: 3px; margin: 0.8rem 0; overflow: hidden; }
+    .progress-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+    .progress-fill.good { background: var(--green); }
+    .progress-fill.warn { background: var(--gold); }
+    .progress-fill.bad  { background: var(--red); }
+    .att-counts { display: flex; gap: 1rem; font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; }
+    .att-counts .p { color: var(--green); font-weight: 700; }
+    .att-counts .a { color: var(--red); font-weight: 700; }
+    .att-warning { font-size: 0.78rem; color: var(--red); background: var(--red-light); border: 1px solid #f5c6c2; border-radius: 6px; padding: 6px 10px; margin-top: 0.5rem; }
+    .att-good-msg { font-size: 0.78rem; color: var(--green); background: var(--green-light); border: 1px solid #b8dfc9; border-radius: 6px; padding: 6px 10px; margin-top: 0.5rem; }
+    .records-list { border-top: 1px solid var(--border); padding-top: 0.8rem; margin-top: 0.5rem; }
+    .record-item { display: flex; justify-content: space-between; align-items: center; font-size: 0.78rem; padding: 4px 0; border-bottom: 1px solid var(--border); }
+    .record-item:last-child { border-bottom: none; }
+    .record-date { color: var(--muted); }
+    .record-day  { color: var(--ink2); font-weight: 600; }
+    .badge-present { background: var(--green-light); color: var(--green); padding: 2px 8px; border-radius: 10px; font-weight: 700; font-size: 0.72rem; }
+    .badge-absent  { background: var(--red-light);   color: var(--red);   padding: 2px 8px; border-radius: 10px; font-weight: 700; font-size: 0.72rem; }
+    .info-banner { background: var(--accent-light); border: 1px solid #c5d5f8; border-radius: var(--radius); padding: 1rem 1.2rem; margin-bottom: 1.5rem; font-size: 0.88rem; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo"><div class="nav-logo-mark">SP</div>StudentPortal</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="courses.html">Courses</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="attendance.html" class="active">Attendance</a>
+      <a href="gpa.html">GPA</a>
+    </div>
+    <div class="nav-right">
+      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">📢</a>
+      <a href="notifications.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">🔔</a>
+      <a href="profile.html" style="text-decoration:none;">
+        <div class="nav-user">
+          <div class="nav-avatar" id="navAvatar">S</div>
+          <span class="nav-username" id="navName">Student</span>
+        </div>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>My Attendance</h1>
+        <p>Track your attendance across all enrolled courses.</p>
+      </div>
+    </div>
+
+    <div class="info-banner">
+      ℹ️ Attendance is marked by your teacher. Contact your teacher if you find any discrepancy.
+    </div>
+
+    <div class="att-grid" id="attGrid">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/attendance.js"></script>
+  <script>
+    requireAuth();
+    loadStudentAttendance();
+  </script>
+</body>
+</html>

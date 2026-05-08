@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Verify Email — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .verify-wrapper { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: var(--bg); padding: 2rem; }
+    .verify-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 3rem 2.5rem; text-align: center; max-width: 420px; width: 100%; box-shadow: var(--shadow-lg); animation: fadeUp 0.4s ease; }
+    .verify-icon { font-size: 3rem; margin-bottom: 1.2rem; }
+    .verify-card h1 { font-family: var(--font-head); font-size: 1.6rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.5px; }
+    .verify-card p { color: var(--muted); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.6; }
+    .btn-goto { display: inline-block; padding: 11px 28px; background: var(--accent); color: white; border-radius: var(--radius-sm); font-family: var(--font-head); font-weight: 700; font-size: 0.9rem; text-decoration: none; transition: all 0.15s; }
+    .btn-goto:hover { background: var(--accent-dark); transform: translateY(-1px); }
+  </style>
+</head>
+<body>
+  <div class="verify-wrapper">
+    <div class="verify-card">
+      <div id="loading"><div class="spinner"></div><p style="color:var(--muted)">Verifying your email...</p></div>
+      <div id="result" style="display:none;">
+        <div class="verify-icon" id="resultIcon"></div>
+        <h1 id="resultTitle"></h1>
+        <p id="resultMsg"></p>
+        <a href="login.html" class="btn-goto">Go to Login →</a>
+      </div>
+    </div>
+  </div>
+  <script src="js/config.js"></script>
+  <script>
+const token = new URLSearchParams(window.location.search).get("token");
+    async function verify() {
+      if (!token) { show("❌", "Invalid Link", "No verification token found in the URL."); return; }
+      try {
+        const res = await fetch(`${API}/auth/verify?token=${token}`);
+        const data = await res.json();
+        if (res.ok) { show("✅", "Email Verified!", data.message + " You can now log in."); }
+        else { show("❌", "Verification Failed", data.error || "Token is invalid or expired."); }
+      } catch { show("⚠️", "Connection Error", "Could not connect to server."); }
+    }
+    function show(icon, title, msg) {
+      document.getElementById("loading").style.display = "none";
+      document.getElementById("result").style.display = "block";
+      document.getElementById("resultIcon").textContent = icon;
+      document.getElementById("resultTitle").textContent = title;
+      document.getElementById("resultMsg").textContent = msg;
+    }
+    verify();
+  </script>
+</body>
+</html>

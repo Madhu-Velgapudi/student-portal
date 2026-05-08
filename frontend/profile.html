@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .profile-grid { display: grid; grid-template-columns: 300px 1fr; gap: 1.5rem; }
+    .profile-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 2rem; box-shadow: var(--shadow-sm); text-align: center; }
+    .profile-avatar { width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: var(--font-head); font-size: 2rem; font-weight: 800; color: white; margin: 0 auto 1rem; }
+    .profile-name { font-family: var(--font-head); font-size: 1.2rem; font-weight: 700; }
+    .profile-email { color: var(--muted); font-size: 0.85rem; margin-top: 0.2rem; }
+    .profile-stats { display: flex; justify-content: center; gap: 2rem; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+    .profile-stat .val { font-family: var(--font-head); font-size: 1.5rem; font-weight: 800; color: var(--accent); }
+    .profile-stat .lbl { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .color-picker { display: flex; gap: 8px; justify-content: center; margin-top: 1rem; flex-wrap: wrap; }
+    .color-dot { width: 28px; height: 28px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+    .color-dot.selected, .color-dot:hover { border-color: var(--ink); transform: scale(1.15); }
+    .form-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.8rem; box-shadow: var(--shadow-sm); margin-bottom: 1rem; }
+    .form-section h2 { font-family: var(--font-head); font-size: 1rem; font-weight: 700; margin-bottom: 1.2rem; padding-bottom: 0.8rem; border-bottom: 1px solid var(--border); }
+    .btn-save { width: auto; padding: 9px 24px; margin-top: 0.5rem; }
+    @media(max-width:768px){ .profile-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo"><div class="nav-logo-mark">SP</div>StudentPortal</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="courses.html">Courses</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="gpa.html">GPA</a>
+    </div>
+    <div class="nav-right">
+      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;" title="Announcements">📢</a>
+      <a href="notifications.html" style="position:relative; text-decoration:none; padding:6px 10px; border-radius:var(--radius-sm); color:var(--muted); font-size:1rem;" title="Notifications">
+        🔔 <span id="notifBadge" style="display:none; position:absolute; top:2px; right:2px; width:8px; height:8px; background:var(--red); border-radius:50%;"></span>
+      </a>
+      <div class="nav-user">
+        <div class="nav-avatar" id="navAvatar">S</div>
+        <span class="nav-username" id="navName">Student</span>
+      </div>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>My Profile</h1>
+        <p>Manage your account details and preferences.</p>
+      </div>
+    </div>
+
+    <div class="profile-grid">
+      <!-- LEFT: Avatar Card -->
+      <div>
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileAvatar">M</div>
+          <div class="profile-name" id="profileName">—</div>
+          <div class="profile-email" id="profileEmail">—</div>
+          <div class="profile-stats">
+            <div class="profile-stat"><div class="val" id="profileCourses">0</div><div class="lbl">Courses</div></div>
+            <div class="profile-stat"><div class="val" id="profileSince">—</div><div class="lbl">Joined</div></div>
+          </div>
+          <div style="margin-top:1.2rem; font-size:0.78rem; color:var(--muted); font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Avatar Color</div>
+          <div class="color-picker" id="colorPicker"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Forms -->
+      <div>
+        <!-- Edit Profile -->
+        <div class="form-section">
+          <h2>Edit Profile</h2>
+          <div class="alert alert-error" id="profileErr"></div>
+          <div class="alert alert-success" id="profileSuc"></div>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" id="editName" placeholder="Your full name" autocomplete="off"/>
+          </div>
+          <div class="form-group">
+            <label>Email Address</label>
+            <input type="email" id="editEmail" disabled style="opacity:0.5; cursor:not-allowed;"/>
+          </div>
+          <button class="btn btn-primary btn-save" onclick="saveProfile()">Save Changes</button>
+        </div>
+
+        <!-- Change Password -->
+        <div class="form-section">
+          <h2>Change Password</h2>
+          <div class="alert alert-error" id="pwErr"></div>
+          <div class="alert alert-success" id="pwSuc"></div>
+          <div class="form-group">
+            <label>Current Password</label>
+            <input type="password" id="currentPw" placeholder="Enter current password" autocomplete="new-password"/>
+          </div>
+          <div class="form-group">
+            <label>New Password</label>
+            <input type="password" id="newPw" placeholder="Min. 6 characters" autocomplete="new-password"/>
+          </div>
+          <div class="form-group">
+            <label>Confirm New Password</label>
+            <input type="password" id="confirmPw" placeholder="Repeat new password" autocomplete="new-password"/>
+          </div>
+          <button class="btn btn-primary btn-save" onclick="changePassword()">Update Password</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/profile.js"></script>
+  <script>
+    requireAuth();
+    initProfile();
+  </script>
+</body>
+</html>

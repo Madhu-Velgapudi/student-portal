@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Courses — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo"><div class="nav-logo-mark">SP</div>StudentPortal</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="courses.html" class="active">Courses</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="attendance.html">Attendance</a>
+    </div>
+    <div class="nav-right">
+      <a href="notifications.html" style="position:relative;text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">🔔</a>
+      <a href="profile.html" style="text-decoration:none;">
+        <div class="nav-user">
+          <div class="nav-avatar" id="navAvatar">S</div>
+          <span class="nav-username" id="navName">Student</span>
+        </div>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Browse Courses</h1>
+        <p>Enroll in courses to build your semester timetable.</p>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('all', this)">All Courses</button>
+      <button class="tab" onclick="switchTab('enrolled', this)">My Courses</button>
+    </div>
+
+    <div class="alert alert-error" id="errMsg"></div>
+    <div class="alert alert-success" id="successMsg"></div>
+
+    <div class="courses-grid" id="coursesGrid">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/courses.js"></script>
+  <script>
+    requireAuth();
+    let allCourses = [], enrolledIds = [], isEnrolling = false;
+
+    async function init() {
+      const user = await fetchUser();
+      if (user) {
+        const fn = user.name.split(" ")[0];
+        document.getElementById("navName").textContent    = fn;
+        document.getElementById("navAvatar").textContent  = fn[0].toUpperCase();
+      }
+      allCourses = await fetchAllCourses();
+      const enrolled = await fetchEnrolledCourses();
+      enrolledIds = enrolled.map(c => c._id);
+      renderTab("all");
+    }
+
+    function switchTab(tab, btn) {
+      document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+      btn.classList.add("active");
+      renderTab(tab);
+    }
+
+    function renderTab(tab) {
+      const grid    = document.getElementById("coursesGrid");
+      const courses = tab === "all" ? allCourses : allCourses.filter(c => enrolledIds.includes(c._id));
+      if (!courses.length) {
+        grid.innerHTML = `<div class="empty-state"><div class="empty-icon">${tab === "all" ? "📭" : "📋"}</div><h3>${tab === "all" ? "No courses available" : "No enrolled courses"}</h3><p>${tab === "enrolled" ? "Switch to All Courses and enroll in some." : ""}</p></div>`;
+        return;
+      }
+      grid.innerHTML = courses.map(c => courseCardHTML(c, enrolledIds.includes(c._id))).join("");
+    }
+
+    async function toggleEnroll(courseId, isEnrolled, btn) {
+      if (isEnrolling) return;
+      isEnrolling = true;
+
+      // Loading state
+      const original = btn.textContent;
+      btn.disabled    = true;
+      btn.textContent = isEnrolled ? "Dropping..." : "Enrolling...";
+      btn.style.opacity = "0.7";
+
+      clearAlerts();
+      const endpoint = isEnrolled ? "drop" : "enroll";
+
+      try {
+        const res  = await fetch(`http://192.168.1.7:5000/api/courses/${endpoint}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getToken() },
+          body: JSON.stringify({ course_id: courseId })
+        });
+        const data = await res.json();
+
+        if (res.ok) {
+          showAlert(data.message, "success");
+          const enrolled = await fetchEnrolledCourses();
+          enrolledIds    = enrolled.map(c => c._id);
+          const activeTab = document.querySelector(".tab.active").textContent.includes("All") ? "all" : "enrolled";
+          renderTab(activeTab);
+        } else {
+          showAlert(data.error, "error");
+          btn.disabled    = false;
+          btn.textContent = original;
+          btn.style.opacity = "1";
+        }
+      } catch {
+        showAlert("Connection error. Try again.", "error");
+        btn.disabled    = false;
+        btn.textContent = original;
+        btn.style.opacity = "1";
+      }
+
+      isEnrolling = false;
+    }
+
+    function showAlert(msg, type) {
+      const err = document.getElementById("errMsg");
+      const suc = document.getElementById("successMsg");
+      err.classList.remove("show"); suc.classList.remove("show");
+      if (!msg) return;
+      if (type === "error") { err.textContent = msg; err.classList.add("show"); }
+      else { suc.textContent = msg; suc.classList.add("show"); }
+      setTimeout(() => { err.classList.remove("show"); suc.classList.remove("show"); }, 3000);
+    }
+
+    function clearAlerts() {
+      document.getElementById("errMsg").classList.remove("show");
+      document.getElementById("successMsg").classList.remove("show");
+    }
+
+    init();
+  </script>
+</body>
+</html>
