@@ -6,3 +6,4 @@ bcrypt
 pyjwt
 python-dotenv
 dnspython
+gunicorn

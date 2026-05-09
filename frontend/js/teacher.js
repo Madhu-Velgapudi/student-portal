@@ -484,4 +484,4 @@ async function deleteAnnouncement(id) {
     method: "DELETE", headers: { "Authorization": "Bearer " + getTeacherToken() }
   });
   if (res.ok) await loadTeacherAnnouncements();
-}
+} 
