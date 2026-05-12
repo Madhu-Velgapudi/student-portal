@@ -14,7 +14,7 @@ def create_app():
     CORS(app, origins=[
         "http://127.0.0.1:5500",
         "http://localhost:5500",
-        "http://192.168.1.7:5500"
+        "https://student-portal-zeta-one.vercel.app"
     ], supports_credentials=True)
     mail.init_app(app)
 
