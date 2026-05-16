@@ -37,7 +37,9 @@ def register():
     try:
         send_verification_email(email, name, token)
         return jsonify({"message": "Registered! Check your email to verify your account."}), 201
-    except Exception:
+    except Exception as e:
+        print("EMAIL ERROR:",str(e))
+        
         db.users.update_one(
             {"email": email},
             {"$set": {"is_verified": True, "verification_token": None}}
