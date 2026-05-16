@@ -98,7 +98,7 @@
       const endpoint = isEnrolled ? "drop" : "enroll";
 
       try {
-        const res  = await fetch(`http://192.168.1.7:5000/api/courses/${endpoint}`, {
+        const res  = await fetch(`${API}/courses/${endpoint}`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getToken() },
           body: JSON.stringify({ course_id: courseId })
