@@ -16,36 +16,35 @@ def register():
     db = current_app.db
     data = request.get_json()
 
-    name     = data.get("name", "").strip()
-    email    = data.get("email", "").strip().lower()
+    name = data.get("name", "").strip()
+    email = data.get("email", "").strip().lower()
     password = data.get("password", "")
 
     if not name or not email or not password:
         return jsonify({"error": "All fields are required"}), 400
+
     if len(password) < 6:
         return jsonify({"error": "Password must be at least 6 characters"}), 400
+
     if db.users.find_one({"email": email}):
         return jsonify({"error": "Email already registered"}), 409
 
-    token = generate_verification_token()
-    user  = new_user(name, email, hash_password(password))
-    user["verification_token"] = token
+    user = new_user(
+        name,
+        email,
+        hash_password(password)
+    )
+
+    # Disable email verification for now
+    user["is_verified"] = True
+    user["verification_token"] = None
     user["is_active"] = True
 
     db.users.insert_one(user)
 
-    try:
-        send_verification_email(email, name, token)
-        return jsonify({"message": "Registered! Check your email to verify your account."}), 201
-    except Exception as e:
-        print("EMAIL ERROR:",str(e))
-        
-        db.users.update_one(
-            {"email": email},
-            {"$set": {"is_verified": True, "verification_token": None}}
-        )
-        return jsonify({"message": "Registered successfully! You can now log in."}), 201
-
+    return jsonify({
+        "message": "Registered successfully! You can now log in."
+    }), 201
 
 @auth_bp.route("/verify", methods=["GET"])
 def verify_email():
