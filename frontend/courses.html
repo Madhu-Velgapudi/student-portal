@@ -14,6 +14,10 @@
       <a href="courses.html" class="active">Courses</a>
       <a href="timetable.html">Timetable</a>
       <a href="attendance.html">Attendance</a>
+      <a href="exams.html">Exams</a>
+      <a href="assignments.html">Assignments</a>
+      <a href="fees.html">Fees</a>
+      <a href="gpa.html">GPA</a>
     </div>
     <div class="nav-right">
       <a href="notifications.html" style="position:relative;text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">🔔</a>
@@ -98,7 +102,7 @@
       const endpoint = isEnrolled ? "drop" : "enroll";
 
       try {
-        const res  = await fetch(`${API}/courses/${endpoint}`, {
+        const res  = await fetch(`http://192.168.1.7:5000/api/courses/${endpoint}`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getToken() },
           body: JSON.stringify({ course_id: courseId })

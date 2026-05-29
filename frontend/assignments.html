@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Assignments — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .assignment-list { display:flex; flex-direction:column; gap:1rem; max-width:800px; }
+    .assignment-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.4rem; box-shadow:var(--shadow-sm); }
+    .assignment-card.submitted  { border-left:3px solid var(--green); }
+    .assignment-card.pending    { border-left:3px solid var(--gold); }
+    .assignment-card.overdue    { border-left:3px solid var(--red); }
+    .assignment-card.graded     { border-left:3px solid var(--accent); }
+    .a-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:0.8rem; flex-wrap:wrap; gap:0.5rem; }
+    .a-title  { font-family:var(--font-head); font-weight:700; font-size:1rem; }
+    .a-course { font-size:0.72rem; color:var(--accent); font-weight:700; background:var(--accent-light); padding:2px 8px; border-radius:4px; }
+    .a-desc   { font-size:0.85rem; color:var(--ink2); margin-bottom:1rem; line-height:1.5; }
+    .a-meta   { display:flex; gap:1rem; font-size:0.8rem; color:var(--muted); flex-wrap:wrap; margin-bottom:1rem; }
+    .status-badge { padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; }
+    .status-submitted { background:var(--green-light); color:var(--green); }
+    .status-pending   { background:#fdf6e3; color:#b5861a; }
+    .status-overdue   { background:var(--red-light); color:var(--red); }
+    .status-graded    { background:var(--accent-light); color:var(--accent); }
+    .submit-section { background:var(--bg2); border-radius:8px; padding:1rem; margin-top:0.8rem; }
+    .submit-section h4 { font-size:0.85rem; font-weight:700; margin-bottom:0.6rem; color:var(--ink2); }
+    .submit-section textarea { width:100%; padding:8px 10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:0.85rem; background:var(--surface); color:var(--ink); outline:none; resize:vertical; min-height:80px; }
+    .submitted-answer { background:var(--green-light); border:1px solid #b8dfc9; border-radius:8px; padding:1rem; margin-top:0.8rem; }
+    .grade-box { background:var(--accent-light); border:1px solid #c5d5f8; border-radius:8px; padding:1rem; margin-top:0.8rem; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo"><div class="nav-logo-mark">SP</div>StudentPortal</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="courses.html">Courses</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="exams.html">Exams</a>
+      <a href="assignments.html" class="active">Assignments</a>
+      <a href="gpa.html">GPA</a>
+    </div>
+    <div class="nav-right">
+      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">📢</a>
+      <a href="notifications.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">🔔</a>
+      <a href="profile.html" style="text-decoration:none;">
+        <div class="nav-user">
+          <div class="nav-avatar" id="navAvatar">S</div>
+          <span class="nav-username" id="navName">Student</span>
+        </div>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Assignments</h1>
+        <p>View and submit your assignments.</p>
+      </div>
+    </div>
+    <div id="assignmentList">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    requireAuth();
+
+    async function loadAssignments() {
+      const user = await fetchUser();
+      if (user) {
+        const fn = user.name.split(" ")[0];
+        document.getElementById("navName").textContent   = fn;
+        document.getElementById("navAvatar").textContent = fn[0].toUpperCase();
+      }
+
+      const res         = await fetch(`${API}/assignments/my`, { headers: { "Authorization": "Bearer " + getToken() } });
+      const assignments = await res.json();
+      const el          = document.getElementById("assignmentList");
+
+      if (!assignments.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>No assignments yet</h3><p>Your teacher hasn't posted any assignments yet.</p></div>`;
+        return;
+      }
+
+      const today = new Date().toISOString().split("T")[0];
+
+      el.innerHTML = `<div class="assignment-list">${assignments.map(a => {
+        const isOverdue   = a.due_date < today && !a.submission;
+        const isSubmitted = a.submission && a.submission.status !== "graded";
+        const isGraded    = a.submission && a.submission.status === "graded";
+        const isPending   = !a.submission && !isOverdue;
+
+        let cardClass = isPending ? "pending" : isOverdue ? "overdue" : isGraded ? "graded" : "submitted";
+        let statusBadge = isPending   ? `<span class="status-badge status-pending">Pending</span>`
+                        : isOverdue   ? `<span class="status-badge status-overdue">Overdue</span>`
+                        : isGraded    ? `<span class="status-badge status-graded">Graded: ${a.submission.grade}/${a.total_marks}</span>`
+                        : `<span class="status-badge status-submitted">Submitted</span>`;
+
+        let submitSection = "";
+        if (isGraded) {
+          submitSection = `
+            <div class="submitted-answer">
+              <div style="font-size:0.8rem;font-weight:700;color:var(--green);margin-bottom:4px;">✅ Your Answer:</div>
+              <div style="font-size:0.85rem;">${a.submission.answer}</div>
+            </div>
+            <div class="grade-box">
+              <div style="font-size:0.8rem;font-weight:700;color:var(--accent);margin-bottom:4px;">📊 Grade: ${a.submission.grade}/${a.total_marks}</div>
+              ${a.submission.feedback ? `<div style="font-size:0.82rem;color:var(--ink2);">Feedback: ${a.submission.feedback}</div>` : ""}
+            </div>`;
+        } else if (isSubmitted) {
+          submitSection = `
+            <div class="submitted-answer">
+              <div style="font-size:0.8rem;font-weight:700;color:var(--green);margin-bottom:4px;">✅ Submitted — awaiting grade</div>
+              <div style="font-size:0.85rem;">${a.submission.answer}</div>
+            </div>
+            <div class="submit-section">
+              <h4>✏️ Resubmit</h4>
+              <textarea id="ans-${a._id}" placeholder="Update your answer...">${a.submission.answer}</textarea>
+              <button class="btn btn-primary" style="margin-top:8px;padding:8px 20px;" onclick="submitAssignment('${a._id}', this)">Resubmit</button>
+            </div>`;
+        } else if (!isOverdue) {
+          submitSection = `
+            <div class="submit-section">
+              <h4>✏️ Your Answer</h4>
+              <textarea id="ans-${a._id}" placeholder="Type your answer or paste a link..."></textarea>
+              <button class="btn btn-primary" style="margin-top:8px;padding:8px 20px;" onclick="submitAssignment('${a._id}', this)">Submit</button>
+            </div>`;
+        }
+
+        return `
+          <div class="assignment-card ${cardClass}">
+            <div class="a-header">
+              <div>
+                <span class="a-course">${a.course_code}</span>
+                <div class="a-title" style="margin-top:4px;">${a.title}</div>
+              </div>
+              ${statusBadge}
+            </div>
+            ${a.description ? `<div class="a-desc">${a.description}</div>` : ""}
+            <div class="a-meta">
+              <span>📅 Due: ${a.due_date}</span>
+              <span>📊 Marks: ${a.total_marks}</span>
+              <span>👤 By: ${a.posted_by}</span>
+              ${a.created_at ? `<span>📌 Posted: ${a.created_at}</span>` : ""}
+            </div>
+            ${submitSection}
+          </div>`;
+      }).join("")}</div>`;
+    }
+
+    async function submitAssignment(assignmentId, btn) {
+      const textarea = document.getElementById(`ans-${assignmentId}`);
+      const answer   = textarea?.value.trim();
+      if (!answer) { alert("Please write your answer before submitting."); return; }
+
+      btn.disabled    = true;
+      btn.textContent = "Submitting...";
+
+      const res  = await fetch(`${API}/assignments/${assignmentId}/submit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getToken() },
+        body: JSON.stringify({ answer })
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        alert(data.message);
+        loadAssignments();
+      } else {
+        alert(data.error || "Submission failed.");
+        btn.disabled    = false;
+        btn.textContent = "Submit";
+      }
+    }
+
+    loadAssignments();
+  </script>
+</body>
+</html>

@@ -34,6 +34,10 @@ def create_app():
     from routes.marks         import marks_bp
     from routes.announcements import announcements_bp
     from routes.teacher       import teacher_bp
+    from routes.exam          import exam_bp
+    from routes.assignment    import assignment_bp
+    from routes.fee           import fee_bp
+    from routes.analytics     import analytics_bp
 
     app.register_blueprint(auth_bp,          url_prefix="/api/auth")
     app.register_blueprint(courses_bp,       url_prefix="/api/courses")
@@ -43,9 +47,13 @@ def create_app():
     app.register_blueprint(attendance_bp,    url_prefix="/api/attendance")
     app.register_blueprint(notifications_bp, url_prefix="/api/notifications")
     app.register_blueprint(content_bp,       url_prefix="/api/content")
-    app.register_blueprint(marks_bp,          url_prefix="/api/marks")
+    app.register_blueprint(marks_bp,         url_prefix="/api/marks")
     app.register_blueprint(announcements_bp, url_prefix="/api/announcements")
     app.register_blueprint(teacher_bp,       url_prefix="/api/teacher")
+    app.register_blueprint(exam_bp,          url_prefix="/api/exams")
+    app.register_blueprint(assignment_bp,    url_prefix="/api/assignments")
+    app.register_blueprint(fee_bp,           url_prefix="/api/fees")
+    app.register_blueprint(analytics_bp,     url_prefix="/api/analytics")
 
     @app.route("/")
     def health():

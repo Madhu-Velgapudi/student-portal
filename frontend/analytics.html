@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Analytics — Admin Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    .analytics-nav { background:#0a1628; border-bottom:1px solid #1e2d4a; padding:0 2rem; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+    .analytics-nav-logo { font-family:var(--font-head); font-size:1.1rem; font-weight:700; color:white; text-decoration:none; display:flex; align-items:center; gap:8px; }
+    .analytics-nav-mark { width:28px; height:28px; background:var(--accent); border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:white; font-weight:800; }
+    .btn-back { color:#9ca3af; text-decoration:none; font-size:0.85rem; padding:6px 12px; border-radius:var(--radius-sm); background:rgba(255,255,255,0.06); }
+    .btn-back:hover { background:rgba(255,255,255,0.12); color:white; }
+    .overview-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
+    .ov-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem; box-shadow:var(--shadow-sm); text-align:center; }
+    .ov-card .val { font-family:var(--font-head); font-size:1.8rem; font-weight:800; margin:0.3rem 0; }
+    .ov-card .lbl { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+    .charts-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-bottom:2rem; }
+    .chart-card2 { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.5rem; box-shadow:var(--shadow-sm); }
+    .chart-card2-title { font-family:var(--font-head); font-weight:700; font-size:0.95rem; margin-bottom:1.2rem; color:var(--ink); }
+    @media(max-width:768px){ .overview-grid{grid-template-columns:repeat(2,1fr);} .charts-grid2{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+  <nav class="analytics-nav">
+    <a href="admin-dashboard.html" class="analytics-nav-logo">
+      <div class="analytics-nav-mark">A</div>Admin Analytics
+    </a>
+    <a href="admin-dashboard.html" class="btn-back">← Back to Dashboard</a>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>Analytics Dashboard</h1>
+        <p>Overview of your student portal statistics.</p>
+      </div>
+    </div>
+
+    <div id="analyticsContainer">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script>
+    if (!getAdminToken()) window.location.href = "admin-login.html";
+
+    async function loadAnalytics() {
+      const res  = await fetch(`${API}/analytics/overview`, {
+        headers: { "Authorization": "Bearer " + getAdminToken() }
+      });
+      const data = await res.json();
+      const el   = document.getElementById("analyticsContainer");
+
+      const o = data.overview;
+
+      el.innerHTML = `
+        <!-- OVERVIEW STATS -->
+        <div class="overview-grid">
+          <div class="ov-card" style="border-top:3px solid var(--accent);">
+            <div class="lbl">Total Students</div>
+            <div class="val" style="color:var(--accent);">${o.total_students}</div>
+            <div style="font-size:0.75rem;color:var(--green);margin-top:2px;">+${o.recent_registrations} this week</div>
+          </div>
+          <div class="ov-card" style="border-top:3px solid var(--green);">
+            <div class="lbl">Total Courses</div>
+            <div class="val" style="color:var(--green);">${o.total_courses}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${o.total_enrollments} enrollments</div>
+          </div>
+          <div class="ov-card" style="border-top:3px solid var(--gold);">
+            <div class="lbl">Teachers</div>
+            <div class="val" style="color:var(--gold);">${o.total_teachers}</div>
+          </div>
+          <div class="ov-card" style="border-top:3px solid var(--red);">
+            <div class="lbl">Assignments</div>
+            <div class="val" style="color:var(--red);">${o.total_assignments}</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px;">${o.total_submissions} submissions</div>
+          </div>
+        </div>
+
+        <!-- CHARTS ROW 1 -->
+        <div class="charts-grid2">
+          <div class="chart-card2">
+            <div class="chart-card2-title">📊 Enrollment per Course</div>
+            <canvas id="enrollChart" height="220"></canvas>
+          </div>
+          <div class="chart-card2">
+            <div class="chart-card2-title">📈 Attendance % per Course</div>
+            <canvas id="attChart" height="220"></canvas>
+          </div>
+        </div>
+
+        <!-- CHARTS ROW 2 -->
+        <div class="charts-grid2">
+          <div class="chart-card2">
+            <div class="chart-card2-title">🏛 Courses by Department</div>
+            <canvas id="deptChart" height="220"></canvas>
+          </div>
+          <div class="chart-card2">
+            <div class="chart-card2-title">💳 Fee Summary</div>
+            <canvas id="feeChart" height="220"></canvas>
+          </div>
+        </div>`;
+
+      const colors = ["#2d5be3","#1a7a4a","#b5861a","#e63946","#6a0572","#457b9d","#2a9d8f","#e76f51"];
+
+      // Enrollment chart
+      new Chart(document.getElementById("enrollChart"), {
+        type: "bar",
+        data: {
+          labels: data.course_enrollment.map(c => c.code),
+          datasets: [{ label: "Students", data: data.course_enrollment.map(c => c.count), backgroundColor: colors, borderRadius: 6, borderSkipped: false }]
+        },
+        options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true, grid:{color:"#eceae3"}, ticks:{font:{family:"Instrument Sans"}}}, x:{grid:{display:false}, ticks:{font:{family:"Instrument Sans",weight:"600"}}} } }
+      });
+
+      // Attendance chart
+      const attColors = data.attendance_stats.map(a => a.pct >= 75 ? "#1a7a4a" : a.pct >= 50 ? "#b5861a" : "#e63946");
+      new Chart(document.getElementById("attChart"), {
+        type: "bar",
+        data: {
+          labels: data.attendance_stats.map(c => c.code),
+          datasets: [{ label: "Attendance %", data: data.attendance_stats.map(c => c.pct), backgroundColor: attColors, borderRadius: 6, borderSkipped: false }]
+        },
+        options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true, max:100, ticks:{callback:v=>v+"%", font:{family:"Instrument Sans"}}}, x:{grid:{display:false}, ticks:{font:{family:"Instrument Sans",weight:"600"}}} } }
+      });
+
+      // Department doughnut
+      new Chart(document.getElementById("deptChart"), {
+        type: "doughnut",
+        data: {
+          labels: data.dept_distribution.map(d => d.dept),
+          datasets: [{ data: data.dept_distribution.map(d => d.count), backgroundColor: colors, borderWidth: 2, borderColor: "#fff" }]
+        },
+        options: { responsive:true, cutout:"65%", plugins:{ legend:{ position:"right", labels:{ font:{family:"Instrument Sans",size:11}, padding:10, usePointStyle:true } } } }
+      });
+
+      // Fee pie chart
+      new Chart(document.getElementById("feeChart"), {
+        type: "doughnut",
+        data: {
+          labels: ["Paid", "Pending"],
+          datasets: [{ data: [data.fees.paid, data.fees.pending], backgroundColor: ["#1a7a4a", "#b5861a"], borderWidth: 2, borderColor: "#fff" }]
+        },
+        options: { responsive:true, cutout:"65%", plugins:{ legend:{ position:"right", labels:{ font:{family:"Instrument Sans",size:12}, padding:12, usePointStyle:true } }, tooltip:{ callbacks:{ label: ctx => ` ₹${ctx.parsed.toLocaleString()}` } } } }
+      });
+    }
+
+    loadAnalytics();
+  </script>
+</body>
+</html>

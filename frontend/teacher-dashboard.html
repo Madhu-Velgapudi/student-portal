@@ -9,31 +9,29 @@
     .teacher-nav { background:#0d3b2e; border-bottom:1px solid #1a5c42; padding:0 2rem; height:60px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
     .teacher-nav-logo { font-family:var(--font-head); font-size:1.1rem; font-weight:700; color:white; text-decoration:none; display:flex; align-items:center; gap:8px; }
     .teacher-nav-mark { width:28px; height:28px; background:#1a7a4a; border-radius:7px; display:flex; align-items:center; justify-content:center; font-size:0.75rem; color:white; font-weight:800; }
-    .teacher-nav-links { display:flex; gap:2px; }
+    .teacher-nav-links { display:flex; gap:2px; flex-wrap:wrap; }
     .teacher-nav-links a { color:#9ca3af; text-decoration:none; padding:6px 12px; border-radius:var(--radius-sm); font-size:0.875rem; font-weight:500; transition:all 0.15s; }
     .teacher-nav-links a:hover, .teacher-nav-links a.active { color:white; background:rgba(255,255,255,0.08); }
     .teacher-nav-right { display:flex; align-items:center; gap:8px; }
     .teacher-user { display:flex; align-items:center; gap:8px; padding:4px 10px 4px 4px; border-radius:20px; background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.1); }
     .teacher-avatar { width:28px; height:28px; background:#1a7a4a; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:700; color:white; }
     .teacher-username { font-size:0.82rem; font-weight:600; color:#e5e7eb; }
-    .btn-teacher-logout { color:#9ca3af; cursor:pointer; background:none; border:none; font-family:var(--font-body); font-size:0.82rem; padding:6px 10px; border-radius:var(--radius-sm); transition:all 0.15s; }
+    .btn-teacher-logout { color:#9ca3af; cursor:pointer; background:none; border:none; font-family:var(--font-body); font-size:0.82rem; padding:6px 10px; border-radius:var(--radius-sm); }
     .btn-teacher-logout:hover { color:#4ade80; }
     .teacher-section { display:none; }
     .teacher-section.active { display:block; }
     .course-manage-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.4rem; box-shadow:var(--shadow-sm); margin-bottom:1rem; }
-    .course-manage-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; }
     .course-manage-title { font-family:var(--font-head); font-weight:700; font-size:1rem; }
     .course-manage-code { font-size:0.72rem; color:var(--accent); font-weight:700; background:var(--accent-light); padding:2px 8px; border-radius:4px; }
     .add-form { background:var(--bg2); border-radius:8px; padding:1rem; margin-top:0.8rem; }
     .add-form h4 { font-family:var(--font-head); font-size:0.82rem; font-weight:700; margin-bottom:0.8rem; color:var(--ink2); }
     .add-form input, .add-form textarea, .add-form select { width:100%; padding:8px 10px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:0.85rem; background:var(--surface); color:var(--ink); outline:none; margin-bottom:6px; }
-    .btn-post { padding:7px 18px; background:#1a7a4a; color:white; border:none; border-radius:var(--radius-sm); font-family:var(--font-head); font-size:0.82rem; font-weight:700; cursor:pointer; transition:all 0.15s; }
+    .btn-post { padding:7px 18px; background:#1a7a4a; color:white; border:none; border-radius:var(--radius-sm); font-family:var(--font-head); font-size:0.82rem; font-weight:700; cursor:pointer; }
     .btn-post:hover { background:#155e3a; }
-    .btn-sm { padding:5px 12px; border-radius:5px; font-size:0.75rem; font-weight:700; cursor:pointer; border:1.5px solid transparent; font-family:var(--font-head); transition:all 0.15s; }
+    .btn-sm { padding:5px 12px; border-radius:5px; font-size:0.75rem; font-weight:700; cursor:pointer; border:1.5px solid transparent; font-family:var(--font-head); }
     .btn-sm-danger { background:var(--red-light); color:var(--red); border-color:#f5c6c2; }
     .btn-sm-danger:hover { background:var(--red); color:white; }
     .att-select { padding:10px 13px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font-body); font-size:0.9rem; background:var(--surface); color:var(--ink); outline:none; width:100%; margin-bottom:1rem; }
-    .att-select:focus { border-color:#1a7a4a; }
   </style>
 </head>
 <body>
@@ -43,8 +41,10 @@
     </a>
     <div class="teacher-nav-links">
       <a href="#" class="active" onclick="switchTeacherTab('courses',this)">My Courses</a>
-      <a href="#" onclick="switchTeacherTab('attendance',this)">Mark Attendance</a>
-      <a href="#" onclick="switchTeacherTab('marks',this)">Enter Marks</a>
+      <a href="#" onclick="switchTeacherTab('attendance',this)">Attendance</a>
+      <a href="#" onclick="switchTeacherTab('marks',this)">Marks</a>
+      <a href="#" onclick="switchTeacherTab('assignments',this)">Assignments</a>
+      <a href="#" onclick="switchTeacherTab('exams',this)">Exams</a>
       <a href="#" onclick="switchTeacherTab('announcements',this)">Announcements</a>
     </div>
     <div class="teacher-nav-right">
@@ -91,10 +91,9 @@
             </div>
           </div>
         </div>
-        <div id="attSheet"><div class="empty-state"><div class="empty-icon">📋</div><h3>Select a course and date</h3><p>Choose a course and class date above to mark attendance.</p></div></div>
+        <div id="attSheet"><div class="empty-state"><div class="empty-icon">📋</div><h3>Select a course and date</h3></div></div>
       </div>
     </div>
-
 
     <!-- MARKS TAB -->
     <div class="teacher-section" id="ttab-marks">
@@ -103,9 +102,77 @@
           <h3 style="font-family:var(--font-head);font-weight:700;margin-bottom:1rem;">Select Course</h3>
           <select class="att-select" id="marksCourseSelect" onchange="loadMarksSheet()"></select>
         </div>
-        <div id="marksSheet">
-          <div class="empty-state"><div class="empty-icon">📝</div><h3>Select a course</h3><p>Choose a course above to enter student marks.</p></div>
+        <div id="marksSheet"><div class="empty-state"><div class="empty-icon">📝</div><h3>Select a course</h3></div></div>
+      </div>
+    </div>
+
+    <!-- ASSIGNMENTS TAB -->
+    <div class="teacher-section" id="ttab-assignments">
+      <div style="max-width:800px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow-sm);">
+          <h3 style="font-family:var(--font-head);font-weight:700;margin-bottom:1rem;">➕ Post New Assignment</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <select class="att-select" id="asgCourse" style="margin-bottom:0;"></select>
+            <input type="text" id="asgTitle" placeholder="Assignment title" style="padding:10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.9rem;background:var(--surface);color:var(--ink);outline:none;"/>
+          </div>
+          <textarea id="asgDesc" placeholder="Description (optional)" rows="2" style="width:100%;margin-top:8px;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;resize:vertical;"></textarea>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px;align-items:center;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);">Due Date</label>
+              <input type="date" id="asgDue" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);">Total Marks</label>
+              <input type="number" id="asgMarks" placeholder="100" value="100" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+            </div>
+            <button class="btn-post" style="margin-top:18px;" onclick="postAssignment()">Post</button>
+          </div>
         </div>
+        <div id="assignmentsList"><div class="loading"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- EXAMS TAB -->
+    <div class="teacher-section" id="ttab-exams">
+      <div style="max-width:800px;">
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.5rem;margin-bottom:1.5rem;box-shadow:var(--shadow-sm);">
+          <h3 style="font-family:var(--font-head);font-weight:700;margin-bottom:1rem;">📅 Schedule Exam</h3>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <select class="att-select" id="examCourse" style="margin-bottom:0;"></select>
+            <select class="att-select" id="examType" style="margin-bottom:0;">
+              <option value="midterm">Midterm</option>
+              <option value="final">Final</option>
+              <option value="quiz">Quiz</option>
+              <option value="practical">Practical</option>
+            </select>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);">Date</label>
+              <input type="date" id="examDate" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);">Start Time</label>
+              <input type="time" id="examStart" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);">End Time</label>
+              <input type="time" id="examEnd" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;margin-top:8px;align-items:flex-end;">
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);">Room</label>
+              <input type="text" id="examRoom" placeholder="e.g. Hall A" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+            </div>
+            <div>
+              <label style="font-size:0.78rem;color:var(--muted);">Total Marks</label>
+              <input type="number" id="examMarks" placeholder="100" value="100" style="width:100%;padding:8px 10px;border:1.5px solid var(--border);border-radius:var(--radius-sm);font-family:var(--font-body);font-size:0.85rem;background:var(--surface);color:var(--ink);outline:none;"/>
+            </div>
+            <button class="btn-post" onclick="scheduleExam()">Schedule</button>
+          </div>
+        </div>
+        <div id="examsList"><div class="loading"><div class="spinner"></div></div></div>
       </div>
     </div>
 

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fees — Student Portal</title>
+  <link rel="stylesheet" href="css/style.css"/>
+  <style>
+    .fee-summary { display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:2rem; }
+    .fee-stat { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem; box-shadow:var(--shadow-sm); text-align:center; }
+    .fee-stat .val { font-family:var(--font-head); font-size:1.6rem; font-weight:800; margin:0.3rem 0; }
+    .fee-stat .lbl { font-size:0.75rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; }
+    .fee-list { display:flex; flex-direction:column; gap:0.75rem; max-width:800px; }
+    .fee-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:1.2rem 1.5rem; box-shadow:var(--shadow-sm); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:1rem; }
+    .fee-card.paid    { border-left:3px solid var(--green); }
+    .fee-card.pending { border-left:3px solid var(--gold); }
+    .fee-card.overdue { border-left:3px solid var(--red); }
+    .fee-type  { font-family:var(--font-head); font-weight:700; font-size:0.95rem; text-transform:capitalize; }
+    .fee-meta  { font-size:0.8rem; color:var(--muted); margin-top:4px; }
+    .fee-amount { font-family:var(--font-head); font-size:1.3rem; font-weight:800; }
+    .fee-amount.paid    { color:var(--green); }
+    .fee-amount.pending { color:var(--gold); }
+    .fee-amount.overdue { color:var(--red); }
+    .fee-badge { padding:3px 10px; border-radius:20px; font-size:0.75rem; font-weight:700; margin-top:4px; display:inline-block; }
+    .badge-paid    { background:var(--green-light); color:var(--green); }
+    .badge-pending { background:#fdf6e3; color:#b5861a; }
+    .badge-overdue { background:var(--red-light); color:var(--red); }
+    .info-banner { background:var(--accent-light); border:1px solid #c5d5f8; border-radius:var(--radius); padding:1rem 1.2rem; margin-bottom:1.5rem; font-size:0.88rem; color:var(--accent); }
+    @media(max-width:768px){ .fee-summary{ grid-template-columns:repeat(2,1fr); } }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="dashboard.html" class="nav-logo"><div class="nav-logo-mark">SP</div>StudentPortal</a>
+    <div class="nav-links">
+      <a href="dashboard.html">Dashboard</a>
+      <a href="courses.html">Courses</a>
+      <a href="timetable.html">Timetable</a>
+      <a href="attendance.html">Attendance</a>
+      <a href="exams.html">Exams</a>
+      <a href="assignments.html">Assignments</a>
+      <a href="fees.html" class="active">Fees</a>
+      <a href="gpa.html">GPA</a>
+    </div>
+    <div class="nav-right">
+      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">📢</a>
+      <a href="notifications.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">🔔</a>
+      <a href="profile.html" style="text-decoration:none;">
+        <div class="nav-user">
+          <div class="nav-avatar" id="navAvatar">S</div>
+          <span class="nav-username" id="navName">Student</span>
+        </div>
+      </a>
+      <button class="btn-logout" onclick="logout()">Log out</button>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="page-header">
+      <div class="page-header-left">
+        <h1>My Fees</h1>
+        <p>View your fee details and payment status.</p>
+      </div>
+    </div>
+
+    <div class="info-banner">
+      ℹ️ Fee payments are processed offline. Contact admin to update payment status.
+    </div>
+
+    <div id="feesContainer">
+      <div class="loading"><div class="spinner"></div></div>
+    </div>
+  </div>
+
+  <script src="js/config.js"></script>
+  <script src="js/auth.js"></script>
+  <script>
+    requireAuth();
+
+    async function loadFees() {
+      const user = await fetchUser();
+      if (user) {
+        const fn = user.name.split(" ")[0];
+        document.getElementById("navName").textContent   = fn;
+        document.getElementById("navAvatar").textContent = fn[0].toUpperCase();
+      }
+
+      const res  = await fetch(`${API}/fees/my`, { headers: { "Authorization": "Bearer " + getToken() } });
+      const data = await res.json();
+      const el   = document.getElementById("feesContainer");
+
+      if (!data.fees || !data.fees.length) {
+        el.innerHTML = `<div class="empty-state"><div class="empty-icon">💳</div><h3>No fees yet</h3><p>No fees have been assigned to your account yet.</p></div>`;
+        return;
+      }
+
+      const s = data.summary;
+      el.innerHTML = `
+        <div class="fee-summary">
+          <div class="fee-stat">
+            <div class="lbl">Total</div>
+            <div class="val">₹${s.total.toLocaleString()}</div>
+          </div>
+          <div class="fee-stat" style="border-top:3px solid var(--green);">
+            <div class="lbl">Paid</div>
+            <div class="val" style="color:var(--green);">₹${s.paid.toLocaleString()}</div>
+          </div>
+          <div class="fee-stat" style="border-top:3px solid var(--gold);">
+            <div class="lbl">Pending</div>
+            <div class="val" style="color:var(--gold);">₹${s.pending.toLocaleString()}</div>
+          </div>
+          <div class="fee-stat" style="border-top:3px solid var(--red);">
+            <div class="lbl">Overdue</div>
+            <div class="val" style="color:var(--red);">₹${s.overdue.toLocaleString()}</div>
+          </div>
+        </div>
+        <div class="fee-list">
+          ${data.fees.map(f => `
+            <div class="fee-card ${f.status}">
+              <div>
+                <div class="fee-type">${f.fee_type} Fee</div>
+                <div class="fee-meta">Semester ${f.semester} · ${f.academic_year} · Due: ${f.due_date}</div>
+                ${f.paid_at ? `<div class="fee-meta" style="color:var(--green);">Paid on: ${f.paid_at}</div>` : ""}
+              </div>
+              <div style="text-align:right;">
+                <div class="fee-amount ${f.status}">₹${f.amount.toLocaleString()}</div>
+                <div><span class="fee-badge badge-${f.status}">${f.status.charAt(0).toUpperCase() + f.status.slice(1)}</span></div>
+              </div>
+            </div>`).join("")}
+        </div>`;
+    }
+
+    loadFees();
+  </script>
+</body>
+</html>

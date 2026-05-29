@@ -33,7 +33,7 @@ window.addEventListener("DOMContentLoaded", async () => {
 function switchTab(tab, activeEl) {
   event.preventDefault();
 
-  ["students", "courses", "teachers"].forEach(t => {
+  ["students", "courses", "teachers", "fees"].forEach(t => {
     const section = document.getElementById("tab-" + t);
     if (section) section.style.display = "none";
   });
@@ -50,7 +50,8 @@ function switchTab(tab, activeEl) {
   const titles = {
     students: ["All Students",    "View and manage student accounts."],
     courses:  ["Manage Courses",  "Add and remove courses."],
-    teachers: ["Manage Teachers", "Add teachers and assign courses."]
+    teachers: ["Manage Teachers", "Add teachers and assign courses."],
+    fees:     ["Fee Management",  "Add and manage student fees."]
   };
 
   document.getElementById("pageTitle").textContent    = titles[tab][0];
@@ -59,6 +60,7 @@ function switchTab(tab, activeEl) {
   if (tab === "courses")  loadCourses();
   if (tab === "teachers") loadTeachers();
   if (tab === "students") loadStudents();
+  if (tab === "fees")     loadFees();
 }
 
 // ── STATS ──
@@ -510,4 +512,124 @@ async function assignCourse() {
   const data = await res.json();
   if (res.ok) { closeAssignModal(); loadTeachers(); }
   else alert(data.error);
+}
+
+
+// ══════════════════════════════════════
+// FEES
+// ══════════════════════════════════════
+async function loadFees() {
+  // Load students into select
+  const studRes  = await fetch(`${API}/admin/students`, { headers: { "Authorization": "Bearer " + getAdminToken() } });
+  const students = await studRes.json();
+  const select   = document.getElementById("feeStudentSelect");
+  if (select) {
+    select.innerHTML = students.map(s => `<option value="${s._id}">${s.name} (${s.email})</option>`).join("");
+  }
+
+  // Load all fees
+  const feeRes = await fetch(`${API}/fees/all`, { headers: { "Authorization": "Bearer " + getAdminToken() } });
+  const fees   = await feeRes.json();
+  const el     = document.getElementById("feesList");
+  if (!el) return;
+
+  if (!fees.length) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">💳</div><h3>No fees added yet</h3><p>Add fees for students using the form above.</p></div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow-sm);">
+      <table class="data-table" style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Semester</th>
+            <th>Due Date</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${fees.map(f => `
+            <tr>
+              <td><div style="font-weight:600;">${f.student_name}</div></td>
+              <td style="text-transform:capitalize;">${f.fee_type}</td>
+              <td style="font-weight:700;">₹${f.amount.toLocaleString()}</td>
+              <td>Sem ${f.semester}</td>
+              <td>${f.due_date}</td>
+              <td>
+                <span style="padding:3px 10px;border-radius:20px;font-size:0.75rem;font-weight:700;
+                  background:${f.status==='paid'?'var(--green-light)':f.status==='overdue'?'var(--red-light)':'#fdf6e3'};
+                  color:${f.status==='paid'?'var(--green)':f.status==='overdue'?'var(--red)':'#b5861a'};">
+                  ${f.status.charAt(0).toUpperCase()+f.status.slice(1)}
+                </span>
+              </td>
+              <td>
+                <div style="display:flex;gap:6px;">
+                  ${f.status !== 'paid' ? `<button onclick="markFeePaid('${f._id}')" style="padding:5px 12px;background:var(--green);color:white;border:none;border-radius:5px;font-size:0.75rem;font-weight:700;cursor:pointer;">Mark Paid</button>` : ''}
+                  <button onclick="deleteFee('${f._id}')" style="padding:5px 12px;background:var(--red-light);color:var(--red);border:1px solid #f5c6c2;border-radius:5px;font-size:0.75rem;font-weight:700;cursor:pointer;">Delete</button>
+                </div>
+              </td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+async function addFee() {
+  const studentId = document.getElementById("feeStudentSelect")?.value;
+  const feeType   = document.getElementById("feeType")?.value;
+  const amount    = document.getElementById("feeAmount")?.value;
+  const dueDate   = document.getElementById("feeDueDate")?.value;
+  const semester  = document.getElementById("feeSemester")?.value;
+  const year      = document.getElementById("feeYear")?.value;
+
+  if (!studentId || !amount || !dueDate) { alert("Student, amount and due date are required."); return; }
+
+  const res  = await fetch(`${API}/fees/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getAdminToken() },
+    body: JSON.stringify({ student_id: studentId, fee_type: feeType, amount: parseFloat(amount), due_date: dueDate, semester, academic_year: year })
+  });
+  const data = await res.json();
+  if (res.ok) { alert(data.message); loadFees(); }
+  else { alert(data.error || "Failed to add fee."); }
+}
+
+async function addFeeBulk() {
+  const feeType  = document.getElementById("feeType")?.value;
+  const amount   = document.getElementById("feeAmount")?.value;
+  const dueDate  = document.getElementById("feeDueDate")?.value;
+  const semester = document.getElementById("feeSemester")?.value;
+  const year     = document.getElementById("feeYear")?.value;
+
+  if (!amount || !dueDate) { alert("Amount and due date are required."); return; }
+  if (!confirm(`Add ${feeType} fee of ₹${amount} for ALL students?`)) return;
+
+  const res  = await fetch(`${API}/fees/bulk`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getAdminToken() },
+    body: JSON.stringify({ fee_type: feeType, amount: parseFloat(amount), due_date: dueDate, semester, academic_year: year })
+  });
+  const data = await res.json();
+  if (res.ok) { alert(data.message); loadFees(); }
+  else { alert(data.error || "Failed."); }
+}
+
+async function markFeePaid(feeId) {
+  const res = await fetch(`${API}/fees/${feeId}/pay`, {
+    method: "POST", headers: { "Authorization": "Bearer " + getAdminToken() }
+  });
+  if (res.ok) loadFees();
+}
+
+async function deleteFee(feeId) {
+  if (!confirm("Delete this fee?")) return;
+  const res = await fetch(`${API}/fees/${feeId}`, {
+    method: "DELETE", headers: { "Authorization": "Bearer " + getAdminToken() }
+  });
+  if (res.ok) loadFees();
 }
