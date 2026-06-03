@@ -368,7 +368,7 @@ async function deleteContent(itemId, courseId, type) {
 async function addAnnouncement() {
   const title   = document.getElementById("annTitle").value.trim();
   const message = document.getElementById("annMessage").value.trim();
-  if (!title || !message) { alert("Title and message required."); return; }
+  if (!title || !message) { toastError("Title and message required."); return; }
 
   const res = await fetch(`${API}/content/${currentCourseId}/announcements`, {
     method: "POST",
@@ -386,7 +386,7 @@ async function addSyllabusWeek() {
   const week  = document.getElementById("sylWeek").value;
   const topic = document.getElementById("sylTopic").value.trim();
   const desc  = document.getElementById("sylDesc").value.trim();
-  if (!week || !topic) { alert("Week and topic required."); return; }
+  if (!week || !topic) { toastError("Week and topic required."); return; }
 
   const res = await fetch(`${API}/content/${currentCourseId}/syllabus`, {
     method: "POST",
@@ -406,7 +406,7 @@ async function addMaterial() {
   const type  = document.getElementById("matType").value;
   const url   = document.getElementById("matUrl").value.trim();
   const desc  = document.getElementById("matDesc").value.trim();
-  if (!title) { alert("Title required."); return; }
+  if (!title) { toastError("Title required."); return; }
 
   const res = await fetch(`${API}/content/${currentCourseId}/materials`, {
     method: "POST",
@@ -587,7 +587,7 @@ async function addFee() {
   const semester  = document.getElementById("feeSemester")?.value;
   const year      = document.getElementById("feeYear")?.value;
 
-  if (!studentId || !amount || !dueDate) { alert("Student, amount and due date are required."); return; }
+  if (!studentId || !amount || !dueDate) { toastError("Student, amount and due date are required."); return; }
 
   const res  = await fetch(`${API}/fees/`, {
     method: "POST",
@@ -595,8 +595,8 @@ async function addFee() {
     body: JSON.stringify({ student_id: studentId, fee_type: feeType, amount: parseFloat(amount), due_date: dueDate, semester, academic_year: year })
   });
   const data = await res.json();
-  if (res.ok) { alert(data.message); loadFees(); }
-  else { alert(data.error || "Failed to add fee."); }
+  if (res.ok) { toastSuccess(data.message); loadFees(); }
+  else { toastError(data.error || "Failed to add fee."); }
 }
 
 async function addFeeBulk() {
@@ -606,8 +606,8 @@ async function addFeeBulk() {
   const semester = document.getElementById("feeSemester")?.value;
   const year     = document.getElementById("feeYear")?.value;
 
-  if (!amount || !dueDate) { alert("Amount and due date are required."); return; }
-  if (!confirm(`Add ${feeType} fee of ₹${amount} for ALL students?`)) return;
+  if (!amount || !dueDate) { toastError("Amount and due date are required."); return; }
+  
 
   const res  = await fetch(`${API}/fees/bulk`, {
     method: "POST",
@@ -615,8 +615,8 @@ async function addFeeBulk() {
     body: JSON.stringify({ fee_type: feeType, amount: parseFloat(amount), due_date: dueDate, semester, academic_year: year })
   });
   const data = await res.json();
-  if (res.ok) { alert(data.message); loadFees(); }
-  else { alert(data.error || "Failed."); }
+  if (res.ok) { toastSuccess(data.message); loadFees(); }
+  else { toastError(data.error || "Failed."); }
 }
 
 async function markFeePaid(feeId) {
@@ -627,7 +627,7 @@ async function markFeePaid(feeId) {
 }
 
 async function deleteFee(feeId) {
-  if (!confirm("Delete this fee?")) return;
+  // confirm replaced by showConfirm
   const res = await fetch(`${API}/fees/${feeId}`, {
     method: "DELETE", headers: { "Authorization": "Bearer " + getAdminToken() }
   });

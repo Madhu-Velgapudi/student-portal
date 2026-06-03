@@ -255,7 +255,7 @@ async function saveMarks(studentId, courseId) {
   const marks = parseFloat(input?.value);
   const btn   = document.getElementById(`save-btn-${studentId}`);
   const msg   = document.getElementById(`save-msg-${studentId}`);
-  if (isNaN(marks) || marks < 0 || marks > 100) { input.style.borderColor = "var(--red)"; alert("Enter valid marks 0-100."); return; }
+  if (isNaN(marks) || marks < 0 || marks > 100) { input.style.borderColor = "var(--red)"; toastError("Enter valid marks between 0 and 100."); return; }
   btn.disabled = true; btn.textContent = "Saving...";
   const res = await fetch(`${API}/marks/enter`, {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
@@ -267,7 +267,7 @@ async function saveMarks(studentId, courseId) {
     msg.style.display = "inline";
     setTimeout(() => { msg.style.display = "none"; input.style.borderColor = "var(--border)"; }, 2000);
     setTimeout(() => loadMarksSheet(), 2100);
-  } else { btn.textContent = "Save"; btn.disabled = false; alert("Failed to save marks."); }
+  } else { btn.textContent = "Save"; btn.disabled = false; toastError("Failed to save marks."); }
 }
 
 // ── ASSIGNMENTS ──
@@ -306,27 +306,28 @@ async function postAssignment() {
   const desc     = document.getElementById("asgDesc")?.value.trim();
   const dueDate  = document.getElementById("asgDue")?.value;
   const marks    = document.getElementById("asgMarks")?.value;
-  if (!courseId || !title || !dueDate) { alert("Course, title and due date are required."); return; }
+  if (!courseId || !title || !dueDate) { toastError("Course, title and due date are required."); return; }
   const res = await fetch(`${API}/assignments/`, {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
     body: JSON.stringify({ course_id: courseId, title, description: desc, due_date: dueDate, total_marks: parseInt(marks) || 100 })
   });
   const data = await res.json();
   if (res.ok) {
-    alert(data.message);
+    toastSuccess(data.message);
     document.getElementById("asgTitle").value = "";
     document.getElementById("asgDesc").value  = "";
     document.getElementById("asgDue").value   = "";
     loadAssignmentsList(courseId);
-  } else { alert(data.error || "Failed to post assignment."); }
+  } else { toastError(data.error || "Failed to post assignment."); }
 }
 
 async function deleteAssignment(id) {
-  if (!confirm("Delete this assignment?")) return;
+  showConfirm("This will permanently delete the assignment and all submissions.", async () => {
   const res = await fetch(`${API}/assignments/${id}`, {
     method: "DELETE", headers: { "Authorization": "Bearer " + getTeacherToken() }
   });
-  if (res.ok) loadAssignmentsTab();
+  if (res.ok) { toastSuccess("Assignment deleted."); loadAssignmentsTab(); }
+  });
 }
 
 // ── EXAMS ──
@@ -365,52 +366,53 @@ async function scheduleExam() {
   const end      = document.getElementById("examEnd")?.value;
   const room     = document.getElementById("examRoom")?.value.trim();
   const marks    = document.getElementById("examMarks")?.value;
-  if (!courseId || !date || !start) { alert("Course, date and start time are required."); return; }
+  if (!courseId || !date || !start) { toastError("Course, date and start time are required."); return; }
   const res = await fetch(`${API}/exams/`, {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
     body: JSON.stringify({ course_id: courseId, exam_type: examType, date, start_time: start, end_time: end, room: room || "TBD", total_marks: parseInt(marks) || 100 })
   });
   const data = await res.json();
   if (res.ok) {
-    alert(data.message);
+    toastSuccess(data.message);
     document.getElementById("examDate").value  = "";
     document.getElementById("examStart").value = "";
     document.getElementById("examEnd").value   = "";
     document.getElementById("examRoom").value  = "";
     loadExamsList();
-  } else { alert(data.error || "Failed to schedule exam."); }
+  } else { toastError(data.error || "Failed to schedule exam."); }
 }
 
 async function deleteExam(id) {
-  if (!confirm("Delete this exam?")) return;
+  showConfirm("This will permanently delete the exam.", async () => {
   const res = await fetch(`${API}/exams/${id}`, {
     method: "DELETE", headers: { "Authorization": "Bearer " + getTeacherToken() }
   });
-  if (res.ok) loadExamsList();
+  if (res.ok) { toastSuccess("Exam deleted."); loadExamsList(); }
+  });
 }
 
 // ── COURSE CONTENT ──
 async function postCourseAnnouncement(courseId) {
   const title   = document.getElementById(`ann-title-${courseId}`).value.trim();
   const message = document.getElementById(`ann-msg-${courseId}`).value.trim();
-  if (!title || !message) { alert("Title and message required."); return; }
+  if (!title || !message) { toastError("Title and message required."); return; }
   const res = await fetch(`${API}/content/${courseId}/announcements`, {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
     body: JSON.stringify({ title, message })
   });
-  if (res.ok) { document.getElementById(`ann-title-${courseId}`).value = ""; document.getElementById(`ann-msg-${courseId}`).value = ""; alert("Posted!"); }
+  if (res.ok) { document.getElementById(`ann-title-${courseId}`).value = ""; document.getElementById(`ann-msg-${courseId}`).value = ""; toastSuccess("Posted!"); }
 }
 
 async function postSyllabus(courseId) {
   const week  = document.getElementById(`syl-week-${courseId}`).value;
   const topic = document.getElementById(`syl-topic-${courseId}`).value.trim();
   const desc  = document.getElementById(`syl-desc-${courseId}`).value.trim();
-  if (!week || !topic) { alert("Week and topic required."); return; }
+  if (!week || !topic) { toastError("Week and topic required."); return; }
   const res = await fetch(`${API}/content/${courseId}/syllabus`, {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
     body: JSON.stringify({ week: parseInt(week), topic, description: desc })
   });
-  if (res.ok) { document.getElementById(`syl-week-${courseId}`).value = ""; document.getElementById(`syl-topic-${courseId}`).value = ""; document.getElementById(`syl-desc-${courseId}`).value = ""; alert("Added!"); }
+  if (res.ok) { document.getElementById(`syl-week-${courseId}`).value = ""; document.getElementById(`syl-topic-${courseId}`).value = ""; document.getElementById(`syl-desc-${courseId}`).value = ""; toastSuccess("Added!"); }
 }
 
 async function postMaterial(courseId) {
@@ -418,12 +420,12 @@ async function postMaterial(courseId) {
   const type  = document.getElementById(`mat-type-${courseId}`).value;
   const url   = document.getElementById(`mat-url-${courseId}`).value.trim();
   const desc  = document.getElementById(`mat-desc-${courseId}`).value.trim();
-  if (!title) { alert("Title required."); return; }
+  if (!title) { toastError("Title required."); return; }
   const res = await fetch(`${API}/content/${courseId}/materials`, {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
     body: JSON.stringify({ title, material_type: type, url, description: desc })
   });
-  if (res.ok) { document.getElementById(`mat-title-${courseId}`).value = ""; document.getElementById(`mat-url-${courseId}`).value = ""; document.getElementById(`mat-desc-${courseId}`).value = ""; alert("Added!"); }
+  if (res.ok) { document.getElementById(`mat-title-${courseId}`).value = ""; document.getElementById(`mat-url-${courseId}`).value = ""; document.getElementById(`mat-desc-${courseId}`).value = ""; toastSuccess("Added!"); }
 }
 
 // ── ANNOUNCEMENTS ──
@@ -448,7 +450,7 @@ async function postAnnouncement() {
   const title    = document.getElementById("tAnnTitle").value.trim();
   const message  = document.getElementById("tAnnMessage").value.trim();
   const priority = document.getElementById("tAnnPriority").value;
-  if (!title || !message) { alert("Title and message required."); return; }
+  if (!title || !message) { toastError("Title and message required."); return; }
   const res = await fetch(`${API}/announcements/`, {
     method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
     body: JSON.stringify({ title, message, priority })
