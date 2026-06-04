@@ -227,6 +227,9 @@
 
     /* ── BENTO FEATURES ── */
     .bento { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 2.8rem; }
+    .bento-row { display: grid; grid-template-columns: repeat(2,1fr); gap: 10px; margin-top: 10px; }
+    .bento-row:first-of-type { margin-top: 2.8rem; }
+    .bento-3 { grid-template-columns: repeat(3,1fr); }
     .b-card {
       background: var(--surface); border: 1px solid var(--border);
       border-radius: var(--radius-lg); padding: 1.5rem;
@@ -385,6 +388,7 @@
       .lp-nav-links { display: none; }
       .bento { grid-template-columns: 1fr; }
       .b-card.span2 { grid-column: span 1; }
+      .bento-row { grid-template-columns: 1fr !important; }
       .roles-grid { grid-template-columns: 1fr; }
       .steps-grid { grid-template-columns: repeat(2,1fr); }
       .hero h1 { font-size: 2.4rem; letter-spacing: -1px; }
@@ -471,8 +475,9 @@
     <h2 class="s-title">Everything for your<br/>full semester.</h2>
     <p class="s-sub">From enrollment to final grades — built to cover the entire academic journey without switching apps.</p>
   </div>
-  <div class="bento reveal reveal-delay-1">
-    <div class="b-card span2">
+  <!-- ROW 1: 2 equal cards -->
+  <div class="bento-row reveal reveal-delay-1">
+    <div class="b-card">
       <div class="b-icon" style="background:var(--accent-light);">📚</div>
       <h3>Course Enrollment & Auto Timetable</h3>
       <p>Browse and enroll in courses with a single click. Your weekly timetable generates automatically with zero scheduling conflicts based on your course selections.</p>
@@ -481,9 +486,12 @@
     <div class="b-card">
       <div class="b-icon" style="background:var(--green-light);">📋</div>
       <h3>Attendance Tracking</h3>
-      <p>Teachers mark attendance per slot. Students see real-time percentage with low attendance warnings.</p>
+      <p>Teachers mark attendance per slot. Students see real-time percentage with low attendance warnings automatically.</p>
       <span class="b-tag" style="background:var(--green-light);color:var(--green);">● Teachers</span>
     </div>
+  </div>
+  <!-- ROW 2: 3 equal cards -->
+  <div class="bento-row bento-3 reveal reveal-delay-2">
     <div class="b-card">
       <div class="b-icon" style="background:var(--gold-light);">📝</div>
       <h3>Assignments</h3>
@@ -496,10 +504,10 @@
       <p>Schedule midterms, finals and quizzes. Students see countdown timers to each upcoming exam.</p>
       <span class="b-tag" style="background:var(--red-light);color:var(--red);">● Teachers</span>
     </div>
-    <div class="b-card span2">
+    <div class="b-card">
       <div class="b-icon" style="background:var(--green-light);">🎓</div>
-      <h3>GPA & Grades + Admin Analytics</h3>
-      <p>Teachers enter marks and CGPA calculates automatically on a 10-point scale. Admins get visual charts of enrollment, attendance trends and department distribution.</p>
+      <h3>GPA & Analytics</h3>
+      <p>Teachers enter marks, CGPA auto-calculates. Admins get visual charts of enrollment and attendance trends.</p>
       <span class="b-tag" style="background:var(--accent-light);color:var(--accent);">● Students + Admins</span>
     </div>
   </div>
