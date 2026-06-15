@@ -289,15 +289,138 @@ async function loadAssignmentsList(courseId) {
   if (!assignments.length) { el.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div><h3>No assignments posted yet</h3></div>`; return; }
   el.innerHTML = `<div style="display:flex;flex-direction:column;gap:0.75rem;">
     ${assignments.map(a => `
-      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.5rem;box-shadow:var(--shadow-sm);display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-weight:700;font-size:0.9rem;">${a.title}</div>
-          <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">Due: ${a.due_date} · ${a.total_marks} marks</div>
-          ${a.description ? `<div style="font-size:0.8rem;color:var(--ink2);margin-top:4px;">${a.description}</div>` : ""}
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem 1.5rem;box-shadow:var(--shadow-sm);">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+          <div>
+            <div style="font-weight:700;font-size:0.9rem;">${a.title}</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-top:2px;">Due: ${a.due_date} · ${a.total_marks} marks</div>
+            ${a.description ? `<div style="font-size:0.8rem;color:var(--ink2);margin-top:4px;">${a.description}</div>` : ""}
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn-sm" id="viewsub-btn-${a._id}" onclick="toggleSubmissions('${a._id}', '${courseId}', ${a.total_marks})"
+              style="padding:6px 14px;background:var(--accent-light);color:var(--accent);border:1px solid #c7d6fb;border-radius:6px;font-family:var(--font-head);font-size:0.78rem;font-weight:700;cursor:pointer;">
+              View Submissions
+            </button>
+            <button class="btn-sm btn-sm-danger" onclick="deleteAssignment('${a._id}')">Delete</button>
+          </div>
         </div>
-        <button class="btn-sm btn-sm-danger" onclick="deleteAssignment('${a._id}')">Delete</button>
+        <div id="submissions-${a._id}" style="display:none;margin-top:1rem;"></div>
       </div>`).join("")}
   </div>`;
+}
+
+// ── VIEW / GRADE SUBMISSIONS ──
+async function toggleSubmissions(assignmentId, courseId, totalMarks) {
+  const panel = document.getElementById(`submissions-${assignmentId}`);
+  const btn   = document.getElementById(`viewsub-btn-${assignmentId}`);
+  if (!panel) return;
+
+  if (panel.style.display === "block") {
+    panel.style.display = "none";
+    btn.textContent = "View Submissions";
+    return;
+  }
+
+  btn.textContent     = "Loading...";
+  panel.style.display = "block";
+  panel.innerHTML     = `<div class="loading"><div class="spinner"></div></div>`;
+
+  const [subRes, studRes] = await Promise.all([
+    fetch(`${API}/assignments/${assignmentId}/submissions`, { headers: { "Authorization": "Bearer " + getTeacherToken() } }),
+    fetch(`${API}/marks/course/${courseId}`,                 { headers: { "Authorization": "Bearer " + getTeacherToken() } })
+  ]);
+  const submissions = await subRes.json();
+  const students     = await studRes.json();
+
+  btn.textContent = "Hide Submissions";
+
+  const subMap = {};
+  submissions.forEach(s => { subMap[s.student_id] = s; });
+
+  if (!students.length) {
+    panel.innerHTML = `<div class="empty-state" style="padding:1.5rem;"><div class="empty-icon">👥</div><h3>No students enrolled</h3></div>`;
+    return;
+  }
+
+  panel.innerHTML = `
+    <div style="border-top:1px solid var(--border);padding-top:1rem;display:flex;flex-direction:column;gap:10px;">
+      ${students.map(stu => {
+        const sub = subMap[stu.student_id];
+        if (!sub) {
+          return `
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:0.9rem 1.1rem;display:flex;justify-content:space-between;align-items:center;">
+              <div>
+                <div style="font-weight:600;font-size:0.85rem;">${stu.name}</div>
+                <div style="font-size:0.74rem;color:var(--muted);">${stu.email}</div>
+              </div>
+              <span style="font-size:0.74rem;color:var(--muted);font-weight:600;background:var(--surface);padding:3px 10px;border-radius:20px;border:1px solid var(--border);">Not Submitted</span>
+            </div>`;
+        }
+
+        const isGraded = sub.status === "graded";
+        return `
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem 1.1rem;">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+              <div>
+                <div style="font-weight:700;font-size:0.85rem;">${stu.name}</div>
+                <div style="font-size:0.74rem;color:var(--muted);">${stu.email} · Submitted ${sub.submitted_at}</div>
+              </div>
+              <span style="font-size:0.72rem;font-weight:700;padding:3px 10px;border-radius:20px;
+                background:${isGraded ? 'var(--green-light)' : 'var(--gold-light)'};
+                color:${isGraded ? 'var(--green)' : 'var(--gold)'};">
+                ${isGraded ? '✓ Graded' : '⏳ Pending Review'}
+              </span>
+            </div>
+            <div style="background:var(--bg2);border-radius:var(--radius-sm);padding:0.7rem 0.9rem;font-size:0.82rem;color:var(--ink2);line-height:1.6;margin-bottom:10px;white-space:pre-wrap;">${sub.answer}</div>
+            <div style="display:grid;grid-template-columns:110px 1fr auto;gap:8px;align-items:center;">
+              <div style="display:flex;align-items:center;gap:4px;">
+                <input type="number" id="grade-${sub._id}" value="${sub.grade ?? ''}" placeholder="0" min="0" max="${totalMarks}"
+                  style="width:60px;padding:7px 8px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-body);font-size:0.85rem;text-align:center;outline:none;"/>
+                <span style="font-size:0.78rem;color:var(--muted);">/ ${totalMarks}</span>
+              </div>
+              <input type="text" id="feedback-${sub._id}" value="${sub.feedback ?? ''}" placeholder="Feedback (optional)"
+                style="padding:7px 10px;border:1.5px solid var(--border);border-radius:6px;font-family:var(--font-body);font-size:0.82rem;outline:none;"/>
+              <button onclick="saveGrade('${sub._id}', ${totalMarks})" id="gradebtn-${sub._id}"
+                style="padding:7px 16px;background:var(--accent);color:white;border:none;border-radius:6px;font-family:var(--font-head);font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                Save Grade
+              </button>
+            </div>
+          </div>`;
+      }).join("")}
+    </div>`;
+}
+
+async function saveGrade(subId, totalMarks) {
+  const gradeInput    = document.getElementById(`grade-${subId}`);
+  const feedbackInput = document.getElementById(`feedback-${subId}`);
+  const btn           = document.getElementById(`gradebtn-${subId}`);
+
+  const grade = parseFloat(gradeInput.value);
+  if (isNaN(grade) || grade < 0 || grade > totalMarks) {
+    toastError(`Enter a valid grade between 0 and ${totalMarks}.`);
+    gradeInput.style.borderColor = "var(--red)";
+    return;
+  }
+  gradeInput.style.borderColor = "var(--border)";
+
+  btn.disabled    = true;
+  btn.textContent = "Saving...";
+
+  const res = await fetch(`${API}/assignments/submissions/${subId}/grade`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "Authorization": "Bearer " + getTeacherToken() },
+    body: JSON.stringify({ grade, feedback: feedbackInput.value.trim() })
+  });
+
+  if (res.ok) {
+    toastSuccess("Grade saved!");
+    btn.textContent = "Saved ✓";
+    setTimeout(() => { btn.textContent = "Save Grade"; btn.disabled = false; }, 1500);
+  } else {
+    toastError("Failed to save grade.");
+    btn.textContent = "Save Grade";
+    btn.disabled    = false;
+  }
 }
 
 async function postAssignment() {
