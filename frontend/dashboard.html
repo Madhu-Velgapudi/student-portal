@@ -6,13 +6,266 @@
   <title>Dashboard — Student Portal</title>
   <link rel="stylesheet" href="css/style.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <style>
+    .dash { max-width: 1100px; margin: 0 auto; padding: 2rem 2rem 5rem; }
+
+    /* ── HERO CARD (matches auth-left black style) ── */
+    .hero-card {
+      background: var(--ink);
+      border-radius: var(--radius-lg);
+      padding: 2rem 2.5rem;
+      margin-bottom: 1rem;
+      position: relative; overflow: hidden;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 2rem; align-items: center;
+    }
+    .hero-card::before {
+      content: ''; position: absolute; top: -80px; right: 120px;
+      width: 280px; height: 280px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(45,91,227,0.3) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-card::after {
+      content: ''; position: absolute; bottom: -60px; left: 200px;
+      width: 200px; height: 200px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(26,122,74,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-left { position: relative; }
+    .hero-eyebrow {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 1.2px;
+      text-transform: uppercase; color: rgba(255,255,255,0.35);
+      margin-bottom: 6px;
+    }
+    .hero-title {
+      font-family: var(--font-head); font-weight: 800;
+      font-size: clamp(1.5rem, 3vw, 2rem);
+      color: white; letter-spacing: -0.5px; margin-bottom: 1rem; line-height: 1.15;
+    }
+    .hero-title span { color: #6b8ff0; }
+    .hero-chips { display: flex; flex-wrap: wrap; gap: 7px; }
+    .hero-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 11px; border-radius: 20px;
+      font-size: 0.75rem; font-weight: 600;
+    }
+    .chip-blue   { background: rgba(45,91,227,0.22); color: #93a8f4; }
+    .chip-red    { background: rgba(192,57,43,0.22);  color: #f4a093; }
+    .chip-green  { background: rgba(26,122,74,0.22);  color: #6fcf97; }
+    .chip-gold   { background: rgba(181,134,26,0.22); color: #f4d06f; }
+
+    .hero-right { position: relative; text-align: right; }
+    .hero-clock {
+      font-family: var(--font-head); font-weight: 800;
+      font-size: 3rem; color: white; letter-spacing: -2px; line-height: 1;
+    }
+    .hero-date-str {
+      font-size: 0.8rem; color: rgba(255,255,255,0.4);
+      margin-top: 4px; font-weight: 500;
+    }
+    .hero-enroll-btn {
+      margin-top: 14px;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 18px; background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.14); border-radius: var(--radius-sm);
+      color: white; text-decoration: none;
+      font-family: var(--font-head); font-size: 0.82rem; font-weight: 700;
+      transition: all 0.2s;
+    }
+    .hero-enroll-btn:hover { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.25); }
+
+    /* ── STAT ROW ── */
+    .stat-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 10px; }
+    .s-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.1rem 1.3rem;
+      position: relative; overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .s-card:hover { transform: translateY(-2px); box-shadow: var(--shadow); }
+    .s-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+    .s-card-icon {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .s-card-badge {
+      font-size: 0.68rem; font-weight: 700; padding: 2px 8px;
+      border-radius: 10px; white-space: nowrap;
+    }
+    .s-card-val {
+      font-family: var(--font-head); font-weight: 800;
+      font-size: 2rem; color: var(--ink); line-height: 1; margin-bottom: 3px;
+    }
+    .s-card-label { font-size: 0.72rem; color: var(--muted); font-weight: 500; }
+    .s-card-bar {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    }
+
+    /* ── MAIN GRID ── */
+    .main-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .full-grid  { display: grid; grid-template-columns: 1fr; gap: 10px; margin-bottom: 10px; }
+    .three-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px; }
+    .two-grid   { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    /* ── BASE CARD ── */
+    .bc {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.2rem 1.4rem;
+    }
+    .bc-head {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 1rem;
+    }
+    .bc-title {
+      font-family: var(--font-head); font-weight: 700;
+      font-size: 0.88rem; color: var(--ink);
+    }
+    .bc-link {
+      font-size: 0.75rem; color: var(--accent);
+      text-decoration: none; font-weight: 600; transition: opacity 0.15s;
+    }
+    .bc-link:hover { opacity: 0.7; }
+
+    /* ── TODAY TIMELINE ── */
+    .tl-wrap { display: flex; flex-direction: column; }
+    .tl-row {
+      display: flex; gap: 12px; padding: 9px 0;
+      border-bottom: 1px solid var(--border); align-items: flex-start;
+    }
+    .tl-row:last-child { border-bottom: none; }
+    .tl-time-col { width: 70px; flex-shrink: 0; }
+    .tl-time { font-size: 0.72rem; font-weight: 700; color: var(--muted); }
+    .tl-line-col { display: flex; flex-direction: column; align-items: center; gap: 0; padding-top: 3px; }
+    .tl-circle {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      border: 2px solid;
+    }
+    .tl-circle.past    { background: var(--bg2); border-color: var(--border2); }
+    .tl-circle.current { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 0 3px rgba(45,91,227,0.2); }
+    .tl-circle.future  { background: white; border-color: var(--border2); }
+    .tl-content-col { flex: 1; padding-top: 0; }
+    .tl-course { font-size: 0.84rem; font-weight: 700; color: var(--ink); }
+    .tl-room   { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+    .live-pill {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: var(--accent); color: white;
+      font-size: 0.62rem; font-weight: 800; letter-spacing: 0.5px;
+      padding: 2px 7px; border-radius: 10px; margin-left: 6px; vertical-align: middle;
+      animation: pulsePill 2s ease infinite;
+    }
+    @keyframes pulsePill { 0%,100%{opacity:1} 50%{opacity:0.7} }
+
+    /* ── ATTENDANCE BARS ── */
+    .att-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
+    .att-code { font-size: 0.78rem; font-weight: 700; color: var(--ink2); width: 48px; flex-shrink: 0; }
+    .att-track { flex: 1; height: 8px; background: var(--bg2); border-radius: 4px; overflow: hidden; }
+    .att-fill  { height: 100%; border-radius: 4px; transition: width 1.2s cubic-bezier(0.4,0,0.2,1); width: 0%; }
+    .att-pct   { font-size: 0.75rem; font-weight: 700; width: 38px; text-align: right; flex-shrink: 0; }
+    .att-warn  {
+      margin-top: 10px; padding: 7px 10px; background: var(--red-light);
+      border-radius: var(--radius-sm); border: 1px solid #f5c6c2;
+      font-size: 0.76rem; color: var(--red); font-weight: 600;
+    }
+
+    /* ── KANBAN ── */
+    .kanban-wrap { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .kb-col { background: var(--bg); border-radius: 10px; padding: 10px; min-height: 100px; }
+    .kb-col-head {
+      font-size: 0.7rem; font-weight: 700; letter-spacing: 0.6px;
+      text-transform: uppercase; margin-bottom: 8px;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .kb-count {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 18px; height: 18px; border-radius: 50%;
+      font-size: 0.64rem; font-weight: 800;
+    }
+    .kb-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 8px 10px;
+      margin-bottom: 6px; font-size: 0.78rem; transition: all 0.15s;
+    }
+    .kb-card:hover { box-shadow: var(--shadow-sm); transform: translateY(-1px); }
+    .kb-card:last-child { margin-bottom: 0; }
+    .kb-card-title { font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+    .kb-card-meta  { font-size: 0.7rem; color: var(--muted); }
+    .kb-due {
+      float: right; font-size: 0.67rem; font-weight: 700;
+      padding: 1px 6px; border-radius: 8px; margin-left: 4px;
+    }
+    .kb-empty { font-size: 0.76rem; color: var(--muted); text-align: center; padding: 12px 0; }
+
+    /* ── EXAM COUNTDOWN ── */
+    .exam-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 0; border-bottom: 1px solid var(--border);
+    }
+    .exam-row:last-child { border-bottom: none; }
+    .exam-type {
+      padding: 3px 8px; border-radius: 5px;
+      font-size: 0.67rem; font-weight: 800; letter-spacing: 0.3px;
+      text-transform: uppercase; white-space: nowrap; flex-shrink: 0;
+    }
+    .exam-info { flex: 1; min-width: 0; }
+    .exam-name { font-size: 0.83rem; font-weight: 700; color: var(--ink); }
+    .exam-when { font-size: 0.71rem; color: var(--muted); margin-top: 1px; }
+    .exam-timer-box { text-align: right; flex-shrink: 0; }
+    .exam-days { font-family: var(--font-head); font-weight: 800; font-size: 1.2rem; line-height: 1; }
+    .exam-days-label { font-size: 0.65rem; color: var(--muted); }
+
+    /* ── CHART CARDS ── */
+    .chart-h180 { height: 180px; margin-top: 0.5rem; }
+    .chart-h200 { height: 200px; margin-top: 0.5rem; }
+
+    /* ── GPA COURSE LIST ── */
+    .gpa-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 0; border-bottom: 1px solid var(--border);
+    }
+    .gpa-row:last-child { border-bottom: none; }
+    .gpa-code  { font-size: 0.78rem; font-weight: 700; color: var(--ink2); width: 50px; flex-shrink: 0; }
+    .gpa-grade-pill {
+      padding: 2px 9px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 800;
+    }
+    .gpa-marks { font-family: var(--font-head); font-weight: 800; font-size: 1rem; color: var(--ink); margin-left: auto; }
+    .gpa-out   { font-size: 0.7rem; color: var(--muted); }
+
+    /* ── SHIMMER ── */
+    .shimmer {
+      background: linear-gradient(90deg, var(--bg2) 25%, #e4e1da 50%, var(--bg2) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite; border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+    @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+    .s-card { animation: fadeUp 0.4s ease both; }
+    .s-card:nth-child(1){animation-delay:0.05s}
+    .s-card:nth-child(2){animation-delay:0.1s}
+    .s-card:nth-child(3){animation-delay:0.15s}
+    .s-card:nth-child(4){animation-delay:0.2s}
+
+    @media(max-width:900px) {
+      .stat-row   { grid-template-columns: repeat(2,1fr); }
+      .main-grid  { grid-template-columns: 1fr; }
+      .three-grid { grid-template-columns: 1fr; }
+      .two-grid   { grid-template-columns: 1fr; }
+      .kanban-wrap{ grid-template-columns: 1fr; }
+      .hero-card  { grid-template-columns: 1fr; }
+      .hero-right { text-align: left; }
+    }
+    @media(max-width:580px) {
+      .dash { padding: 1rem 1rem 4rem; }
+      .stat-row { grid-template-columns: repeat(2,1fr); }
+      .hero-clock { font-size: 2rem; }
+    }
+  </style>
 </head>
 <body>
   <nav>
-    <a href="dashboard.html" class="nav-logo">
-      <div class="nav-logo-mark">SP</div>
-      StudentPortal
-    </a>
+    <a href="dashboard.html" class="nav-logo"><div class="nav-logo-mark">SP</div>StudentPortal</a>
     <div class="nav-links">
       <a href="dashboard.html" class="active">Dashboard</a>
       <a href="courses.html">Courses</a>
@@ -24,7 +277,7 @@
       <a href="gpa.html">GPA</a>
     </div>
     <div class="nav-right">
-      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;" title="Announcements">📢</a>
+      <a href="announcements.html" style="text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">📢</a>
       <a href="notifications.html" style="position:relative;text-decoration:none;padding:6px 10px;border-radius:var(--radius-sm);color:var(--muted);font-size:1.1rem;">
         🔔<span id="notifBadge" style="display:none;position:absolute;top:4px;right:6px;width:8px;height:8px;background:var(--red);border-radius:50%;"></span>
       </a>
@@ -38,60 +291,163 @@
     </div>
   </nav>
 
-  <div class="container">
-    <div class="page-header">
-      <div class="page-header-left">
-        <h1>Good day, <span id="studentName">Student</span> 👋</h1>
-        <p>Here's your semester overview.</p>
-      </div>
-      <a href="courses.html" style="padding:9px 20px;background:var(--accent);color:white;border-radius:var(--radius-sm);font-family:var(--font-head);font-weight:700;font-size:0.85rem;text-decoration:none;">+ Enroll</a>
-    </div>
+  <div class="dash">
 
-    <!-- STATS -->
-    <div class="stats-row">
-      <div class="stat-card stat-accent">
-        <div class="label">Enrolled Courses</div>
-        <div class="value" id="enrolledCount">—</div>
-        <div class="value-sub">this semester</div>
-      </div>
-      <div class="stat-card stat-green">
-        <div class="label">Total Credits</div>
-        <div class="value" id="totalCredits">—</div>
-        <div class="value-sub">credit hours</div>
-      </div>
-      <div class="stat-card stat-gold">
-        <div class="label">Weekly Classes</div>
-        <div class="value" id="classesThisWeek">—</div>
-        <div class="value-sub">sessions/week</div>
-      </div>
-    </div>
-
-    <!-- CHARTS -->
-    <div id="chartsSection" style="display:none;margin-bottom:2.5rem;">
-      <div class="charts-grid">
-        <div class="chart-card">
-          <div class="chart-title">📊 Attendance by Course</div>
-          <div class="chart-wrap">
-            <canvas id="attChart"></canvas>
-          </div>
-        </div>
-        <div class="chart-card">
-          <div class="chart-title">📘 Credits Distribution</div>
-          <div class="chart-wrap" style="display:flex;align-items:center;justify-content:center;">
-            <canvas id="credChart"></canvas>
-          </div>
+    <!-- HERO BLACK CARD -->
+    <div class="hero-card">
+      <div class="hero-left">
+        <div class="hero-eyebrow" id="heroEyebrow">GOOD MORNING · STUDENT PORTAL</div>
+        <div class="hero-title">Welcome back, <span id="heroName">Student</span> 👋</div>
+        <div class="hero-chips" id="heroChips">
+          <span class="hero-chip chip-blue">⏳ Loading schedule...</span>
         </div>
       </div>
+      <div class="hero-right">
+        <div class="hero-clock" id="heroClock">00:00</div>
+        <div class="hero-date-str" id="heroDate">—</div>
+        <a href="courses.html" class="hero-enroll-btn">+ Enroll in Course</a>
+      </div>
     </div>
 
-    <!-- COURSES -->
-    <div class="section-header">
-      <div class="section-title">My Enrolled Courses</div>
-      <a href="courses.html" style="font-size:0.82rem;color:var(--accent);text-decoration:none;font-weight:600;">View all →</a>
+    <!-- STAT CARDS -->
+    <div class="stat-row">
+      <div class="s-card">
+        <div class="s-card-top">
+          <div class="s-card-icon" style="background:var(--accent-light);">📚</div>
+          <span class="s-card-badge" style="background:var(--accent-light);color:var(--accent);">Enrolled</span>
+        </div>
+        <div class="s-card-val" id="sCourses">—</div>
+        <div class="s-card-label">Courses this Semester</div>
+        <div class="s-card-bar" style="background:var(--accent);"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-top">
+          <div class="s-card-icon" style="background:var(--green-light);">📘</div>
+          <span class="s-card-badge" style="background:var(--green-light);color:var(--green);">Credits</span>
+        </div>
+        <div class="s-card-val" id="sCredits">—</div>
+        <div class="s-card-label">Total Credit Hours</div>
+        <div class="s-card-bar" style="background:var(--green);"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-top">
+          <div class="s-card-icon" style="background:var(--gold-light);">📝</div>
+          <span id="sAsgBadge" class="s-card-badge" style="background:var(--gold-light);color:var(--gold);">Due</span>
+        </div>
+        <div class="s-card-val" id="sAsg">—</div>
+        <div class="s-card-label">Pending Assignments</div>
+        <div class="s-card-bar" style="background:var(--gold);"></div>
+      </div>
+      <div class="s-card">
+        <div class="s-card-top">
+          <div class="s-card-icon" style="background:var(--accent-light);">🎓</div>
+          <span id="sGpaBadge" class="s-card-badge" style="background:var(--accent-light);color:var(--accent);">CGPA</span>
+        </div>
+        <div class="s-card-val" id="sGpa">—</div>
+        <div class="s-card-label">Current GPA</div>
+        <div class="s-card-bar" style="background:var(--accent);"></div>
+      </div>
     </div>
-    <div class="courses-grid" id="enrolledCourses">
-      <div class="loading"><div class="spinner"></div></div>
+
+    <!-- TODAY TIMELINE + EXAMS -->
+    <div class="main-grid">
+      <div class="bc">
+        <div class="bc-head">
+          <div class="bc-title">🗓 Today's Timeline</div>
+          <a href="timetable.html" class="bc-link">Full timetable →</a>
+        </div>
+        <div class="tl-wrap" id="todayTl">
+          <div class="shimmer" style="height:42px;margin-bottom:8px;"></div>
+          <div class="shimmer" style="height:42px;margin-bottom:8px;"></div>
+          <div class="shimmer" style="height:42px;"></div>
+        </div>
+      </div>
+
+      <div class="bc">
+        <div class="bc-head">
+          <div class="bc-title">📅 Exam Countdowns</div>
+          <a href="exams.html" class="bc-link">All exams →</a>
+        </div>
+        <div id="examRows">
+          <div class="shimmer" style="height:50px;margin-bottom:8px;"></div>
+          <div class="shimmer" style="height:50px;"></div>
+        </div>
+      </div>
     </div>
+
+    <!-- KANBAN ASSIGNMENT BOARD -->
+    <div class="bc" style="margin-bottom:10px;">
+      <div class="bc-head">
+        <div class="bc-title">📋 Assignment Board</div>
+        <a href="assignments.html" class="bc-link">View all →</a>
+      </div>
+      <div class="kanban-wrap" id="kanban">
+        <div class="shimmer" style="height:100px;"></div>
+        <div class="shimmer" style="height:100px;"></div>
+        <div class="shimmer" style="height:100px;"></div>
+      </div>
+    </div>
+
+    <!-- CHARTS ROW -->
+    <div class="three-grid">
+      <!-- ATTENDANCE CHART -->
+      <div class="bc">
+        <div class="bc-head">
+          <div class="bc-title">📊 Attendance</div>
+          <a href="attendance.html" class="bc-link">Details →</a>
+        </div>
+        <div class="chart-h180"><canvas id="attChart"></canvas></div>
+      </div>
+
+      <!-- ATTENDANCE BARS -->
+      <div class="bc">
+        <div class="bc-head">
+          <div class="bc-title">📈 By Course</div>
+          <a href="attendance.html" class="bc-link">View →</a>
+        </div>
+        <div id="attBars" style="margin-top:0.3rem;">
+          <div class="shimmer" style="height:16px;margin-bottom:10px;"></div>
+          <div class="shimmer" style="height:16px;margin-bottom:10px;"></div>
+          <div class="shimmer" style="height:16px;"></div>
+        </div>
+      </div>
+
+      <!-- GPA BREAKDOWN -->
+      <div class="bc">
+        <div class="bc-head">
+          <div class="bc-title">🎓 GPA Breakdown</div>
+          <a href="gpa.html" class="bc-link">Details →</a>
+        </div>
+        <div id="gpaRows">
+          <div class="shimmer" style="height:30px;margin-bottom:8px;"></div>
+          <div class="shimmer" style="height:30px;margin-bottom:8px;"></div>
+          <div class="shimmer" style="height:30px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CREDITS DOUGHNUT + ENROLLED COURSES -->
+    <div class="two-grid" style="margin-top:10px;">
+      <div class="bc">
+        <div class="bc-head">
+          <div class="bc-title">📘 Credits Distribution</div>
+        </div>
+        <div class="chart-h200"><canvas id="credChart"></canvas></div>
+      </div>
+
+      <div class="bc">
+        <div class="bc-head">
+          <div class="bc-title">📚 Enrolled Courses</div>
+          <a href="courses.html" class="bc-link">View all →</a>
+        </div>
+        <div id="courseList" style="display:flex;flex-direction:column;gap:6px;">
+          <div class="shimmer" style="height:36px;"></div>
+          <div class="shimmer" style="height:36px;margin-top:6px;"></div>
+          <div class="shimmer" style="height:36px;margin-top:6px;"></div>
+        </div>
+      </div>
+    </div>
+
   </div>
 
   <script src="js/toast.js"></script>
@@ -101,115 +457,324 @@
   <script>
     requireAuth();
 
+    // ── CLOCK ──
+    function startClock() {
+      const tick = () => {
+        const n = new Date();
+        const h = String(n.getHours()).padStart(2,"0");
+        const m = String(n.getMinutes()).padStart(2,"0");
+        document.getElementById("heroClock").textContent = `${h}:${m}`;
+        const days  = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+        const months= ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+        document.getElementById("heroDate").textContent =
+          `${days[n.getDay()]}, ${n.getDate()} ${months[n.getMonth()]} ${n.getFullYear()}`;
+        const g = n.getHours() < 12 ? "GOOD MORNING" : n.getHours() < 17 ? "GOOD AFTERNOON" : "GOOD EVENING";
+        document.getElementById("heroEyebrow").textContent = `${g} · STUDENT PORTAL`;
+      };
+      tick(); setInterval(tick, 1000);
+    }
+    startClock();
+
+    // ── COUNT UP ──
+    function countUp(el, target, dec=0) {
+      if (isNaN(target)) { el.textContent = "—"; return; }
+      let v = 0; const inc = target / 24;
+      const t = setInterval(() => {
+        v = Math.min(v + inc, target);
+        el.textContent = v.toFixed(dec);
+        if (v >= target) clearInterval(t);
+      }, 35);
+    }
+
+    // ── TODAY TIMELINE ──
+    function renderTimeline(courses) {
+      const dayName = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"][new Date().getDay()];
+      const n = new Date(), nowM = n.getHours()*60+n.getMinutes();
+      const slots = [];
+      courses.forEach(c => {
+        c.slots.forEach(s => {
+          if (s.day !== dayName) return;
+          const [sh,sm] = s.start.split(":").map(Number);
+          const [eh,em] = s.end.split(":").map(Number);
+          const sM = sh*60+sm, eM = eh*60+em;
+          const status = nowM > eM ? "past" : nowM >= sM ? "current" : "future";
+          slots.push({code:c.code, name:c.name, time:`${s.start}–${s.end}`, room:s.room, status, sM});
+        });
+      });
+      slots.sort((a,b)=>a.sM-b.sM);
+
+      // Hero chips
+      const chips = [];
+      const cur  = slots.find(s=>s.status==="current");
+      const nxt  = slots.find(s=>s.status==="future");
+      if (cur) chips.push(`<span class="hero-chip chip-blue">🟢 Now: ${cur.code} · ${cur.room}</span>`);
+      else if (nxt) {
+        const [sh,sm] = nxt.time.split("–")[0].split(":").map(Number);
+        const diff = sh*60+sm - nowM;
+        chips.push(`<span class="hero-chip chip-blue">⏰ Next: ${nxt.code} in ${diff < 60 ? diff+"min" : Math.floor(diff/60)+"h"}</span>`);
+      } else if (slots.length) chips.push(`<span class="hero-chip chip-green">✅ All classes done today!</span>`);
+      else chips.push(`<span class="hero-chip chip-green">🎉 No classes today!</span>`);
+      document.getElementById("heroChips").innerHTML = chips.join("");
+
+      const el = document.getElementById("todayTl");
+      if (!slots.length) {
+        el.innerHTML = `<div style="text-align:center;padding:2rem 0;color:var(--muted);font-size:0.85rem;">🎉 No classes scheduled today!</div>`;
+        return;
+      }
+      el.innerHTML = slots.map(s=>`
+        <div class="tl-row">
+          <div class="tl-time-col"><div class="tl-time">${s.time}</div></div>
+          <div class="tl-line-col" style="padding:3px 8px 0;"><div class="tl-circle ${s.status}"></div></div>
+          <div class="tl-content-col">
+            <div class="tl-course" style="color:${s.status==="past"?"var(--muted)":"var(--ink)"};">
+              ${s.code} — ${s.name}
+              ${s.status==="current"?'<span class="live-pill">● LIVE</span>':""}
+            </div>
+            <div class="tl-room">📍 ${s.room}</div>
+          </div>
+        </div>`).join("");
+    }
+
+    // ── EXAM COUNTDOWNS ──
+    function renderExams(exams) {
+      const el  = document.getElementById("examRows");
+      const now = new Date();
+      const up  = exams.filter(e=>new Date(e.date)>=now).sort((a,b)=>new Date(a.date)-new Date(b.date)).slice(0,4);
+      if (!up.length) { el.innerHTML=`<div style="text-align:center;padding:1.5rem 0;color:var(--muted);font-size:0.83rem;">📭 No upcoming exams</div>`; return; }
+      const tc = { midterm:{bg:"var(--accent-light)",c:"var(--accent)"}, final:{bg:"var(--red-light)",c:"var(--red)"}, quiz:{bg:"var(--green-light)",c:"var(--green)"}, practical:{bg:"var(--gold-light)",c:"var(--gold)"} };
+      el.innerHTML = up.map(e=>{
+        const diff  = new Date(e.date) - now;
+        const days  = Math.floor(diff/(1000*60*60*24));
+        const hours = Math.floor((diff%(1000*60*60*24))/(1000*60*60));
+        const t     = tc[e.exam_type]||tc.quiz;
+        const dStr  = days>0?`${days}d`:hours>0?`${hours}h`:"Today!";
+        const dClr  = days<=3?"var(--red)":days<=7?"var(--gold)":"var(--ink)";
+        return `
+          <div class="exam-row">
+            <span class="exam-type" style="background:${t.bg};color:${t.c};">${e.exam_type}</span>
+            <div class="exam-info">
+              <div class="exam-name">${e.course_code}</div>
+              <div class="exam-when">${e.date} · ${e.start_time} · ${e.room}</div>
+            </div>
+            <div class="exam-timer-box">
+              <div class="exam-days" style="color:${dClr};">${dStr}</div>
+              <div class="exam-days-label">left</div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    // ── KANBAN ──
+    function renderKanban(asgs) {
+      const pending   = asgs.filter(a=>!a.submission);
+      const submitted = asgs.filter(a=>a.submission&&a.submission.status!=="graded");
+      const graded    = asgs.filter(a=>a.submission&&a.submission.status==="graded");
+
+      function col(label, color, bgC, cntBg, cntC, items, empty) {
+        const cards = items.slice(0,3).map(a=>{
+          const diff = Math.ceil((new Date(a.due_date)-new Date())/(1000*60*60*24));
+          const ov   = diff<0;
+          const dBg  = ov?"var(--red-light)":diff<=2?"var(--gold-light)":"var(--green-light)";
+          const dC   = ov?"var(--red)":diff<=2?"var(--gold)":"var(--green)";
+          const dS   = ov?"Overdue":diff===0?"Today":`${diff}d`;
+          const grade= a.submission?.grade!=null?` · ${a.submission.grade}/${a.total_marks}`:"";
+          return `
+            <div class="kb-card">
+              <span class="kb-due" style="background:${dBg};color:${dC};">${dS}</span>
+              <div class="kb-card-title">${a.title}</div>
+              <div class="kb-card-meta">${a.course_code||""}${grade}</div>
+            </div>`;
+        }).join("");
+        return `
+          <div class="kb-col">
+            <div class="kb-col-head" style="color:${color};">
+              <span class="kb-count" style="background:${cntBg};color:${cntC};">${items.length}</span>
+              ${label}
+            </div>
+            ${items.length?cards:`<div class="kb-empty">${empty}</div>`}
+          </div>`;
+      }
+
+      document.getElementById("kanban").innerHTML =
+        col("Pending","var(--gold)","var(--gold-light)","var(--gold-light)","var(--gold)",pending,"All done! 🎉") +
+        col("Submitted","var(--accent)","var(--accent-light)","var(--accent-light)","var(--accent)",submitted,"Nothing yet") +
+        col("Graded","var(--green)","var(--green-light)","var(--green-light)","var(--green)",graded,"No grades yet");
+
+      // Hero chip
+      if (pending.length) {
+        document.getElementById("heroChips").innerHTML +=
+          `<span class="hero-chip chip-gold">📝 ${pending.length} assignment${pending.length>1?"s":""} pending</span>`;
+      }
+    }
+
+    // ── ATTENDANCE BARS ──
+    function renderAttBars(courses, attData) {
+      const map={};
+      attData.forEach(a=>{ map[a.course_id]=a; });
+      const el = document.getElementById("attBars");
+      if (!courses.length) { el.innerHTML=`<p style="color:var(--muted);font-size:0.82rem;">No courses.</p>`; return; }
+      const low = courses.filter(c=>(map[c._id]?.percentage||0)<75);
+      el.innerHTML = courses.map(c=>{
+        const pct  = map[c._id]?.percentage||0;
+        const clr  = pct>=75?"var(--green)":pct>=50?"var(--gold)":"var(--red)";
+        return `
+          <div class="att-row">
+            <div class="att-code">${c.code}</div>
+            <div class="att-track"><div class="att-fill" style="background:${clr};" data-w="${pct}%"></div></div>
+            <div class="att-pct" style="color:${clr};">${pct}%</div>
+          </div>`;
+      }).join("") + (low.length?`<div class="att-warn">⚠️ Low attendance: ${low.map(c=>c.code).join(", ")}</div>`:"");
+      setTimeout(()=>{ document.querySelectorAll(".att-fill").forEach(b=>{ b.style.width=b.dataset.w; }); }, 100);
+
+      // Hero chip
+      if (low.length) {
+        document.getElementById("heroChips").innerHTML +=
+          `<span class="hero-chip chip-red">⚠️ Low attendance in ${low.map(c=>c.code).join(", ")}</span>`;
+      }
+    }
+
+    // ── ATTENDANCE CHART ──
+    function renderAttChart(courses, attData) {
+      const map={};
+      attData.forEach(a=>{ map[a.course_id]=a; });
+      const labels = courses.map(c=>c.code);
+      const values = courses.map(c=>map[c._id]?.percentage||0);
+      const colors = values.map(v=>v>=75?"#1a7a4a":v>=50?"#b5861a":"#c0392b");
+      new Chart(document.getElementById("attChart"), {
+        type:"bar",
+        data:{ labels, datasets:[{ data:values, backgroundColor:colors, borderRadius:6, borderSkipped:false }] },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y}%`}} },
+          scales:{
+            y:{ beginAtZero:true, max:100, grid:{color:"#eceae3"}, ticks:{callback:v=>v+"%", font:{family:"Instrument Sans",size:10}} },
+            x:{ grid:{display:false}, ticks:{font:{family:"Instrument Sans",weight:"600",size:10}} }
+          }
+        }
+      });
+    }
+
+    // ── CREDITS CHART ──
+    function renderCredChart(courses) {
+      const pieColors=["#2d5be3","#1a7a4a","#b5861a","#c0392b","#6a0572","#457b9d","#2a9d8f"];
+      new Chart(document.getElementById("credChart"), {
+        type:"doughnut",
+        data:{
+          labels:courses.map(c=>c.code),
+          datasets:[{ data:courses.map(c=>c.credits), backgroundColor:pieColors, borderWidth:2, borderColor:"#fff" }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false, cutout:"65%",
+          plugins:{
+            legend:{ position:"right", labels:{ font:{family:"Instrument Sans",size:10}, padding:10, usePointStyle:true } },
+            tooltip:{ callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed} credits`} }
+          }
+        }
+      });
+    }
+
+    // ── GPA ROWS ──
+    function renderGpaRows(marks) {
+      const el = document.getElementById("gpaRows");
+      if (!marks?.courses?.length) { el.innerHTML=`<div style="color:var(--muted);font-size:0.82rem;padding:0.5rem 0;">No grades entered yet.</div>`; return; }
+      const gradeColors={S:"#1a7a4a",A:"#2d5be3",B:"#b5861a",C:"#6a0572",D:"#e07b00",F:"#c0392b"};
+      const gradeBgs   ={S:"var(--green-light)",A:"var(--accent-light)",B:"var(--gold-light)",C:"#f3e8ff",D:"#fff3e0",F:"var(--red-light)"};
+      el.innerHTML = marks.courses.map(c=>`
+        <div class="gpa-row">
+          <div class="gpa-code">${c.course_code}</div>
+          <span class="gpa-grade-pill" style="background:${gradeBgs[c.grade]||"var(--bg2)"};color:${gradeColors[c.grade]||"var(--muted)"};">${c.grade}</span>
+          <div style="flex:1;height:6px;background:var(--bg2);border-radius:3px;overflow:hidden;margin:0 8px;">
+            <div style="height:100%;width:${c.marks||0}%;background:${gradeColors[c.grade]||"var(--border2)"};border-radius:3px;transition:width 1s ease;"></div>
+          </div>
+          <div class="gpa-marks">${c.marks??'—'}<span class="gpa-out">/100</span></div>
+        </div>`).join("");
+    }
+
+    // ── COURSE LIST ──
+    function renderCourseList(courses) {
+      const el = document.getElementById("courseList");
+      if (!courses.length) { el.innerHTML=`<div style="color:var(--muted);font-size:0.82rem;">No courses enrolled.</div>`; return; }
+      const colors=["var(--accent)","var(--green)","var(--gold)","var(--red)","#6a0572","#457b9d"];
+      el.innerHTML = courses.map((c,i)=>`
+        <a href="course-content.html?id=${c._id}" style="text-decoration:none;">
+          <div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--bg);border-radius:var(--radius-sm);border:1px solid var(--border);transition:all 0.15s;" onmouseover="this.style.background='var(--accent-light)'" onmouseout="this.style.background='var(--bg)'">
+            <div style="width:8px;height:8px;border-radius:50%;background:${colors[i%colors.length]};flex-shrink:0;"></div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:0.82rem;font-weight:700;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${c.name}</div>
+              <div style="font-size:0.7rem;color:var(--muted);">${c.code} · ${c.credits} credits</div>
+            </div>
+            <span style="font-size:0.7rem;color:var(--accent);font-weight:600;">→</span>
+          </div>
+        </a>`).join("");
+    }
+
+    // ── MAIN ──
     async function init() {
       const user = await fetchUser();
       if (!user) return;
-
-      const firstName = user.name.split(" ")[0];
-      document.getElementById("studentName").textContent = firstName;
-      document.getElementById("navName").textContent     = firstName;
-      document.getElementById("navAvatar").textContent   = firstName[0].toUpperCase();
+      const fn = user.name.split(" ")[0];
+      document.getElementById("heroName").textContent   = fn;
+      document.getElementById("navName").textContent    = fn;
+      document.getElementById("navAvatar").textContent  = fn[0].toUpperCase();
 
       const courses = await fetchEnrolledCourses();
-      document.getElementById("enrolledCount").textContent   = courses.length;
-      document.getElementById("totalCredits").textContent    = courses.reduce((s, c) => s + c.credits, 0);
-      document.getElementById("classesThisWeek").textContent = courses.reduce((s, c) => s + c.slots.length, 0);
+      countUp(document.getElementById("sCourses"), courses.length);
+      countUp(document.getElementById("sCredits"), courses.reduce((s,c)=>s+c.credits,0));
+      renderTimeline(courses);
+      renderCourseList(courses);
+      renderCredChart(courses);
 
-      const grid = document.getElementById("enrolledCourses");
-      if (!courses.length) {
-        grid.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><h3>No courses enrolled yet</h3><p>Head to <a href="courses.html">Courses</a> to get started.</p></div>`;
-      } else {
-        grid.innerHTML = courses.map(c => courseCardHTML(c, true)).join("");
-        // Load charts
-        try {
-          const res     = await fetch(`${API}/attendance/my`, {
-            headers: { "Authorization": "Bearer " + getToken() }
-          });
-          const attData = await res.json();
-          renderCharts(courses, attData);
-          document.getElementById("chartsSection").style.display = "block";
-        } catch {}
-      }
-
-      // Notification badge
+      // Attendance
       try {
-        const res  = await fetch(`${API}/notifications/count`, {
-          headers: { "Authorization": "Bearer " + getToken() }
-        });
-        const data = await res.json();
-        if (data.count > 0) document.getElementById("notifBadge").style.display = "block";
+        const r = await fetch(`${API}/attendance/my`,{headers:{"Authorization":"Bearer "+getToken()}});
+        const d = await r.json();
+        renderAttBars(courses, d);
+        renderAttChart(courses, d);
+      } catch { document.getElementById("attBars").innerHTML=`<p style="color:var(--muted);font-size:0.82rem;">Could not load.</p>`; }
+
+      // Assignments
+      try {
+        const r = await fetch(`${API}/assignments/my`,{headers:{"Authorization":"Bearer "+getToken()}});
+        const d = await r.json();
+        const pend = d.filter(a=>!a.submission||a.submission.status==="pending").length;
+        countUp(document.getElementById("sAsg"), pend);
+        if (pend===0) {
+          document.getElementById("sAsgBadge").style.background="var(--green-light)";
+          document.getElementById("sAsgBadge").style.color="var(--green)";
+          document.getElementById("sAsgBadge").textContent="All done!";
+        }
+        renderKanban(d);
+      } catch { document.getElementById("sAsg").textContent="—"; }
+
+      // Exams
+      try {
+        const r = await fetch(`${API}/exams/my`,{headers:{"Authorization":"Bearer "+getToken()}});
+        const d = await r.json();
+        renderExams(d);
+      } catch { document.getElementById("examRows").innerHTML=`<p style="color:var(--muted);font-size:0.82rem;">Could not load.</p>`; }
+
+      // GPA
+      try {
+        const r = await fetch(`${API}/marks/my`,{headers:{"Authorization":"Bearer "+getToken()}});
+        const d = await r.json();
+        if (d.cgpa!=null) {
+          countUp(document.getElementById("sGpa"), d.cgpa, 2);
+          const gc = d.cgpa>=8?"var(--green-light)":d.cgpa>=6?"var(--gold-light)":"var(--red-light)";
+          const gt = d.cgpa>=8?"Excellent":d.cgpa>=6?"Good":"At Risk";
+          const gct= d.cgpa>=8?"var(--green)":d.cgpa>=6?"var(--gold)":"var(--red)";
+          document.getElementById("sGpaBadge").style.background=gc;
+          document.getElementById("sGpaBadge").style.color=gct;
+          document.getElementById("sGpaBadge").textContent=gt;
+        }
+        renderGpaRows(d);
+      } catch { document.getElementById("sGpa").textContent="—"; }
+
+      // Notif
+      try {
+        const r = await fetch(`${API}/notifications/count`,{headers:{"Authorization":"Bearer "+getToken()}});
+        const d = await r.json();
+        if (d.count>0) document.getElementById("notifBadge").style.display="block";
       } catch {}
-    }
-
-    function renderCharts(courses, attData) {
-      const attMap = {};
-      attData.forEach(a => { attMap[a.course_id] = a; });
-
-      const labels    = courses.map(c => c.code);
-      const attValues = courses.map(c => (attMap[c._id] ? attMap[c._id].percentage : 0));
-      const attColors = attValues.map(v => v >= 75 ? "#1a7a4a" : v >= 50 ? "#b5861a" : "#c0392b");
-      const credValues = courses.map(c => c.credits);
-      const pieColors  = ["#2d5be3","#1a7a4a","#b5861a","#e63946","#6a0572","#457b9d","#2a9d8f"];
-
-      // Attendance bar chart
-      new Chart(document.getElementById("attChart"), {
-        type: "bar",
-        data: {
-          labels,
-          datasets: [{
-            label: "Attendance %",
-            data: attValues,
-            backgroundColor: attColors,
-            borderRadius: 6,
-            borderSkipped: false
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          plugins: {
-            legend: { display: false },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.parsed.y}% attendance` } }
-          },
-          scales: {
-            y: {
-              beginAtZero: true, max: 100,
-              grid: { color: "#eceae3" },
-              ticks: { callback: v => v + "%", font: { family: "Instrument Sans" } }
-            },
-            x: {
-              grid: { display: false },
-              ticks: { font: { family: "Instrument Sans", weight: "600" } }
-            }
-          }
-        }
-      });
-
-      // Credits doughnut chart
-      new Chart(document.getElementById("credChart"), {
-        type: "doughnut",
-        data: {
-          labels,
-          datasets: [{
-            data: credValues,
-            backgroundColor: pieColors,
-            borderWidth: 2,
-            borderColor: "#fff"
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: true,
-          cutout: "65%",
-          plugins: {
-            legend: {
-              position: "right",
-              labels: { font: { family: "Instrument Sans", size: 11 }, padding: 10, usePointStyle: true }
-            },
-            tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.parsed} credits` } }
-          }
-        }
-      });
     }
 
     init();
